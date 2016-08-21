@@ -124,7 +124,7 @@ def main():
             if not page_nav.find(attrs={'class': 'next ajax-page'}):
                 csv_file = "YP_" + search_term + "_" + search_location + ".csv"
                 write_to_csv(csv_file, csv_columns, answer_list)  # output data to csv file
-                print(search_location + " " + search_term + "complete.")
+                print(search_location + " " + search_term + " " + "complete.")
                 break
 
 
