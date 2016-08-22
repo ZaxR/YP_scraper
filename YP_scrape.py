@@ -108,12 +108,12 @@ def main():
             i += 1
             url = urls(search_term, search_location, i)
             print (i, url) #to visual progress
-            proxy = random.choice(load_proxies(proxies_file))
+            proxy = random.choice(load_proxies(proxies_file)) # loads proxies and selects random proxy
             proxy = {"http": proxy}
             ua = random.choice(load_user_agents(user_agents_file))  # loads user-agents and selects a random user agent
             headers = {
                 "Connection": "close",  #cover tracks
-                "User-Agent": ua}
+                "User-Agent": ua} # http://webaim.org/blog/user-agent-string-history/
             r = pull_request(url, headers, proxy) #runs requests.get
             soup = BeautifulSoup(r.text, "html.parser")
             main = soup.find(attrs={'class': 'search-results organic'})
