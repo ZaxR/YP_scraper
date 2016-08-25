@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 # Search criteria
 user_agents_file = 'user_agents.txt' #user-agent txt file path as string
 proxies_file = 'proxies.txt' #proxies txt file path as string
-search_terms = ["term1", "term2"]
+search_terms = ["Edible+Arrangements",]
 search_locations = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS',
                     'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY',
                     'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV',
@@ -101,7 +101,7 @@ def find_contact_info(record):
     return holder_list
 
 # Main program
-def main():
+def main(answer_list):
     for search_term, search_location in itertools.product(search_terms, search_locations):
         i = 0
         while True:
@@ -125,11 +125,12 @@ def main():
                 csv_file = "YP_" + search_term + "_" + search_location + ".csv"
                 write_to_csv(csv_file, csv_columns, answer_list)  # output data to csv file
                 print(search_location + " " + search_term + " " + "complete.")
+                answer_list = [] #blank list for new term+location combo
                 break
 
 
 if __name__ == '__main__':
-    main()
+    main(answer_list)
 
 
 # todo create GUI
