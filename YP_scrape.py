@@ -118,7 +118,14 @@ def main(answer_list):
             soup = BeautifulSoup(r.text, "html.parser")
             main = soup.find(attrs={'class': 'search-results organic'})
             page_nav = soup.find(attrs={'class': 'pagination'})
-            records = main.find_all(attrs={'class': 'info'})
+            try:
+                records = main.find_all(attrs={'class': 'info'})
+            except:
+                csv_file = "YP_" + search_term + "_" + search_location + ".csv"
+                write_to_csv(csv_file, csv_columns, answer_list)  # output data to csv file
+                print(search_location + " " + search_term + " " + "complete, but had a Nonetype error. Rerun this state later.")
+                answer_list = []  # blank list for new term+location combo
+                break
             for record in records:
                 answer_list.append(find_contact_info(record))
             if not page_nav.find(attrs={'class': 'next ajax-page'}):
