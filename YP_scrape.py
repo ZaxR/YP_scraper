@@ -15,9 +15,6 @@ search_locations = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
                     'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV',
                     'WI', 'WY']
 
-# Structure for Data
-answer_list = [] #todo remove global variable; change to database
-
 # Turns list of lists into csv file
 def write_to_csv(search_term, search_location, answer_list):
     csv_file = "YP_" + search_term + "_" + search_location + ".csv"
@@ -94,8 +91,9 @@ def contact_info(record):
     return [contact_detail(attrs) for attrs in elements]
 
 # Main program
-def main(answer_list):
+def main():
     for search_term, search_location in itertools.product(search_terms, search_locations):
+        answer_list = []
         i = 0
         while True:
             i += 1
@@ -127,4 +125,4 @@ def main(answer_list):
                 break
 
 if __name__ == '__main__':
-    main(answer_list)
+    main()
