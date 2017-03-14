@@ -16,15 +16,17 @@ search_locations = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
                     'WI', 'WY']
 
 # Structure for Data
-answer_list = [] #todo change to database
-csv_columns = ['Name', 'Phone Number', 'Street Address', 'City', 'State', 'Zip Code', 'Website']
+answer_list = [] #todo remove global variable; change to database
 
 # Turns list of lists into csv file
-def write_to_csv(csv_file, csv_columns, answer_list):
+def write_to_csv(search_term, search_location, answer_list):
+    csv_file = "YP_" + search_term + "_" + search_location + ".csv"
+    csv_columns = ['Name', 'Phone Number', 'Street Address', 'City', 'State', 'Zip Code', 'Website']
     with open(csv_file, 'w') as csvfile:
         writer = csv.writer(csvfile, lineterminator='\n')
         writer.writerow(csv_columns)
         writer.writerows(answer_list)
+    print(search_location + " " + search_term + " " + "complete.")
 
 #load the user agents
 def load_user_agents(user_agents_file):
@@ -112,18 +114,15 @@ def main(answer_list):
             try:
                 records = main.find_all(attrs={'class': 'info'})
             except:
-                csv_file = "YP_" + search_term + "_" + search_location + ".csv"
-                write_to_csv(csv_file, csv_columns, answer_list)  # output data to csv file
-                print(search_location + " " + search_term + " " + "complete, but had a Nonetype error. Rerun this state later.")
+                write_to_csv(search_term, search_location, answer_list)  # output data to csv file
+                print("Last seach had a Nonetype error. Rerun this State later.")
                 answer_list = []  # blank list for new term+location combo
                 break
 
             answer_list += [contact_info(record) for record in records]
 
             if not page_nav.find(attrs={'class': 'next ajax-page'}):
-                csv_file = "YP_" + search_term + "_" + search_location + ".csv"
-                write_to_csv(csv_file, csv_columns, answer_list)  # output data to csv file
-                print(search_location + " " + search_term + " " + "complete.")
+                write_to_csv(search_term, search_location, answer_list)  # output data to csv file
                 answer_list = [] #blank list for new term+location combo
                 break
 
