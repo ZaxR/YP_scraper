@@ -83,22 +83,21 @@ def pull_request(url, proxy, headers):
 
 # Finds all the contact information for a record
 def find_contact_info(record):
-    holder_list = []
-    name = record.find(attrs={'class': 'business-name'})
-    holder_list.append(name.text if name is not None else "")
-    phone_number = record.find(attrs={'class': 'phones phone primary'})
-    holder_list.append(phone_number.text if phone_number is not None else "")
-    street_address = record.find(attrs={'class': 'street-address'})
-    holder_list.append(street_address.text if street_address is not None else "")
-    city = record.find(attrs={'class': 'locality'})
-    holder_list.append(city.text if city is not None else "")
-    state = record.find(attrs={'itemprop': 'addressRegion'})
-    holder_list.append(state.text if state is not None else "")
-    zip_code = record.find(attrs={'itemprop': 'postalCode'})
-    holder_list.append(zip_code.text if zip_code is not None else "")
-    website = record.find(attrs={'class': 'links'})
-    holder_list.append(website.text if website is not None else "")  # todo capture url as opposed to text
-    return holder_list
+    def contact_detail(attr, value):
+        detail = record.find(attrs={attr: value})
+        return detail.text if detail is not None else ""
+
+    elements = [
+        ('class', 'business-name'),
+        ('class', 'phones phone primary'),
+        ('class', 'street-address'),
+        ('class', 'locality'),
+        ('itemprop', 'addressRegion'),
+        ('itemprop', 'postalCode'),
+        ('class', 'links'),
+    ]
+
+    return [contact_detail(attr, value) for attr, value in elements]
 
 # Main program
 def main(answer_list):
@@ -118,9 +117,17 @@ def main(answer_list):
             soup = BeautifulSoup(r.text, "html.parser")
             main = soup.find(attrs={'class': 'search-results organic'})
             page_nav = soup.find(attrs={'class': 'pagination'})
-            records = main.find_all(attrs={'class': 'info'})
-            for record in records:
-                answer_list.append(find_contact_info(record))
+            try:
+                records = main.find_all(attrs={'class': 'info'})
+            except:
+                csv_file = "YP_" + search_term + "_" + search_location + ".csv"
+                write_to_csv(csv_file, csv_columns, answer_list)  # output data to csv file
+                print(search_location + " " + search_term + " " + "complete, but had a Nonetype error. Rerun this state later.")
+                answer_list = []  # blank list for new term+location combo
+                break
+
+            answer_list += [find_contact_info(record) for record in records]
+
             if not page_nav.find(attrs={'class': 'next ajax-page'}):
                 csv_file = "YP_" + search_term + "_" + search_location + ".csv"
                 write_to_csv(csv_file, csv_columns, answer_list)  # output data to csv file
@@ -131,7 +138,3 @@ def main(answer_list):
 
 if __name__ == '__main__':
     main(answer_list)
-
-
-# todo create GUI
-# todo freeze program as .exe
