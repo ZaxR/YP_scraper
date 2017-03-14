@@ -32,13 +32,9 @@ def load_user_agents(user_agents_file):
     user_agents_file : string
         path to text file of user agents, one per line
     """
-    uas = []
     with open(user_agents_file, 'rb') as uaf:
-        for ua in uaf.readlines():
-            if ua:
-                uas.append(ua.strip()[1:-1 - 1])
-    random.shuffle(uas)
-    return uas
+        uas = [ua.strip() for ua in uaf.readlines() if ua]
+    return random.choice(uas)
 
 #load proxies
 def load_proxies(proxies_file):
@@ -46,13 +42,9 @@ def load_proxies(proxies_file):
     proxies_file : string
         path to text file of proxies, one per line
     """
-    proxy_list = []
     with open(proxies_file, 'rb') as proxies:
-        for proxy in proxies.readlines():
-            if proxy:
-                proxy_list.append(proxy.strip()[1:-1 - 1])
-    random.shuffle(proxy_list)
-    return proxy_list
+        proxy_list = [proxy.strip() for proxy in proxies.readlines() if proxy]
+    return random.choice(proxy_list)
 
 # Creates url from search criteria and current page
 def urls(search_term, location, page_number):
@@ -107,9 +99,8 @@ def main(answer_list):
             i += 1
             url = urls(search_term, search_location, i)
             print (i, url) #to visual progress
-            proxy = random.choice(load_proxies(proxies_file)) # loads proxies and selects random proxy
-            proxy = {"http": proxy}
-            ua = random.choice(load_user_agents(user_agents_file))  # loads user-agents and selects a random user agent
+            proxy = {"http":load_proxies(proxies_file)} # loads proxies and selects random proxy
+            ua = load_user_agents(user_agents_file)  # loads user-agents and selects a random user agent
             headers = {
                 "Connection": "close",  #cover tracks
                 "User-Agent": ua} # http://webaim.org/blog/user-agent-string-history/
@@ -117,6 +108,7 @@ def main(answer_list):
             soup = BeautifulSoup(r.text, "html.parser")
             main = soup.find(attrs={'class': 'search-results organic'})
             page_nav = soup.find(attrs={'class': 'pagination'})
+
             try:
                 records = main.find_all(attrs={'class': 'info'})
             except:
@@ -134,7 +126,6 @@ def main(answer_list):
                 print(search_location + " " + search_term + " " + "complete.")
                 answer_list = [] #blank list for new term+location combo
                 break
-
 
 if __name__ == '__main__':
     main(answer_list)
