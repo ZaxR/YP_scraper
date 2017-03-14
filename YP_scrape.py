@@ -74,22 +74,22 @@ def pull_request(url, proxy, headers):
         sys.exit()
 
 # Finds all the contact information for a record
-def find_contact_info(record):
-    def contact_detail(attr, value):
-        detail = record.find(attrs={attr: value})
+def contact_info(record):
+    def contact_detail(attrs):
+        detail = record.find(attrs=attrs)
         return detail.text if detail is not None else ""
 
     elements = [
-        ('class', 'business-name'),
-        ('class', 'phones phone primary'),
-        ('class', 'street-address'),
-        ('class', 'locality'),
-        ('itemprop', 'addressRegion'),
-        ('itemprop', 'postalCode'),
-        ('class', 'links'),
+        {'class': 'business-name'},
+        {'class': 'phones phone primary'},
+        {'class': 'street-address'},
+        {'class': 'locality'},
+        {'itemprop': 'addressRegion'},
+        {'itemprop': 'postalCode'},
+        {'class': 'links'},
     ]
 
-    return [contact_detail(attr, value) for attr, value in elements]
+    return [contact_detail(attrs) for attrs in elements]
 
 # Main program
 def main(answer_list):
@@ -118,7 +118,7 @@ def main(answer_list):
                 answer_list = []  # blank list for new term+location combo
                 break
 
-            answer_list += [find_contact_info(record) for record in records]
+            answer_list += [contact_info(record) for record in records]
 
             if not page_nav.find(attrs={'class': 'next ajax-page'}):
                 csv_file = "YP_" + search_term + "_" + search_location + ".csv"
