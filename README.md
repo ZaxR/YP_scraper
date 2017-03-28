@@ -18,3 +18,5 @@ Yellow Pages web scraper. Uses Python (requests and beautifulsoup) and outputs t
   * Design cleaner "Progress" visualization for current keyword, current location, records scraped, and time elapsed
   * Add task scheduler, start button, and stop button
 * Freeze program as an standalone executable -or- deploy as webapp
+* Miscellaneous
+  * Add handling for writing files when files can't be written (such as if a user already has the file in question open)
