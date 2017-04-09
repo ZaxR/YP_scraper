@@ -19,12 +19,15 @@ class gui(tk.Frame):
     def create_widgets(self):
 
         # Widget set-up for Textbox to enter search terms
-        self.search_terms_box = tk.Text(self.root, width=30, height=20, wrap="word")
-        self.search_terms_box.grid(column=0, row=1, columnspan=10, rowspan=10)
+        self.searchframe = ttk.Labelframe(self.root, padding=(6, 8, 12, 12), text='Locations')
+        self.searchframe.grid(column=0, columnspan=10, row=0, rowspan=10, sticky='nsew')
+
+        self.search_terms_box = tk.Text(self.searchframe, width=30, height=15, wrap="word")
+        self.search_terms_box.grid(column=0, row=0, columnspan=10)
         self.search_terms_box.insert('1.0', 'Enter search terms separated by commas here.')
 
-        self.search_terms = tk.Button(self.root, text='Save', command=self.save_search)
-        self.search_terms.grid(column=0, row=11)
+        self.search_terms = tk.Button(self.root, text='Save', width=30, command=self.save_search)
+        self.search_terms.grid(column=0, row=11, columnspan=10)
 
         # Widget set-up for locations to search
         self.search_locations = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI',
@@ -34,14 +37,18 @@ class gui(tk.Frame):
                                  'VT', 'VA', 'WA', 'WV', 'WI', 'WY']
         self.checkboxes = []
         self.locations = {}
+
+        self.locationframe = ttk.Labelframe(self.root, padding=(6, 6, 12, 12), text='Locations')
+        self.locationframe.grid(column=11, columnspan=5, row=0, rowspan=10, sticky='nsew')
+
         self.create_locations()
         # todo Have all states toggled on by default
 
-        select_all_locations = tk.Button(self.root, text='All', command=self.select_all)
-        select_all_locations.grid(column=11, row=11)
+        select_all_locations = tk.Button(self.root, text='All', width=10, command=self.select_all)
+        select_all_locations.grid(column=12, row=11)
 
-        deselect_all_locations = tk.Button(self.root, text='None', command=self.deselect_all)
-        deselect_all_locations.grid(column=12, row=11)
+        deselect_all_locations = tk.Button(self.root, text='None', width=10, command=self.deselect_all)
+        deselect_all_locations.grid(column=14, row=11)
 
         # Widget set-up for proxies list button
         # todo loads the .txt (or creates one if there is none?)
@@ -53,11 +60,21 @@ class gui(tk.Frame):
         # todo alternatively, current term, location, time elapsed, progressbar
 
         # Widget set-up for Run button
-        run_program = tk.Button(self.root, text='Run', command=self.run_main)
-        run_program.grid(column=13, row=11)
+        run_program = tk.Button(self.root, text='Run', height=8, width=45, bg='green', command=self.run_main)
+        run_program.grid(column=16, row=3)
 
         # Widget set-up for Stop button
         # todo have run button become stop button
+
+        # Widget set-up for Progress section
+        self.progressframe = ttk.Labelframe(self.root, padding=(6, 6, 12, 12), text='Progress')
+        self.progressframe.grid(column=16, row=5, rowspan=5, sticky='nsew')
+
+        info = (u"Current Keyword", u"Current Location", u"Records Scraped",
+                u"Time Elapsed", u"Percentage Complete")
+        for i, item in enumerate(info):
+            ttk.Label(self.progressframe, text=u"{0}: ".format(item)).grid(in_=self.progressframe, column=0, row=i, sticky='w')
+        self.progressbar = ttk.Progressbar(self.progressframe, orient="horizontal", length=200, mode="indeterminate").grid(column=1, row=4)
 
     def save_search(self):  # todo if no search term is saved, TypeError: Can't convert 'int' object to str implicitly
         raw_search_terms = self.search_terms_box.get('1.0', 'end-1c')
@@ -72,7 +89,7 @@ class gui(tk.Frame):
                 c += 1
                 r -= 10
             self.var = tk.IntVar()
-            self.checkboxes.append(tk.Checkbutton(self.root, text=item, variable=self.var,
+            self.checkboxes.append(tk.Checkbutton(self.locationframe, text=item, variable=self.var,
                                                   command=lambda item=item, var=self.var: self.get_checkbox_value(item, var)))
             self.checkboxes[index].grid(column=c, row=r)
 
