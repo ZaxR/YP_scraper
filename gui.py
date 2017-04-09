@@ -3,6 +3,7 @@ import re
 import tkinter as tk
 from tkinter import ttk
 
+
 import YP_scrape
 
 
@@ -18,7 +19,7 @@ class gui(tk.Frame):
     def create_widgets(self):
 
         # Widget set-up for Textbox to enter search terms
-        self.search_terms_box = tk.Text(self.root)  #, width=30, height=30
+        self.search_terms_box = tk.Text(self.root, width=30, height=20, wrap="word")
         self.search_terms_box.grid(column=0, row=1, columnspan=10, rowspan=10)
         self.search_terms_box.insert('1.0', 'Enter search terms separated by commas here.')
 
@@ -43,20 +44,20 @@ class gui(tk.Frame):
         deselect_all_locations.grid(column=12, row=11)
 
         # Widget set-up for proxies list button
-        # loads the .txt (or creates one if there is none?)
-        # allows to add (insert)/remove (delete?) proxies from scrollable listbox?
+        # todo loads the .txt (or creates one if there is none?)
+        # todo allows to add (insert)/remove (delete?) proxies from scrollable listbox?
 
 
         # Widget set-up for messages from program
-        # scrollable listbox?
-        # alternatively, current term, location, time elapsed, progressbar
+        # todo set up scrollable listbox?
+        # todo alternatively, current term, location, time elapsed, progressbar
 
         # Widget set-up for Run button
         run_program = tk.Button(self.root, text='Run', command=self.run_main)
         run_program.grid(column=13, row=11)
 
         # Widget set-up for Stop button
-        # have run button become stop button
+        # todo have run button become stop button
 
     def save_search(self):  # todo if no search term is saved, TypeError: Can't convert 'int' object to str implicitly
         raw_search_terms = self.search_terms_box.get('1.0', 'end-1c')
@@ -94,6 +95,9 @@ class gui(tk.Frame):
             checkbox.deselect()
 
     def run_main(self):
+        if not isinstance(self.search_terms, (tuple,list)):
+            print('Please enter search term(s) and click "save" before running.')
+            return
         self.locations = collections.OrderedDict(sorted(self.locations.items()))
         print('Searching the following: \n Terms:{0} \n Locations:{1}'.format(self.search_terms,[k for k in self.locations]))
         YP_scrape.main(self.search_terms, self.locations)
@@ -103,5 +107,4 @@ class gui(tk.Frame):
         self.root.mainloop()
 
 
-#if __name__ == "__main__":
 gui().start()

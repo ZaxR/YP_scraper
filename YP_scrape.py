@@ -4,10 +4,12 @@ import random
 import sys
 import time
 
+
 import requests
 from bs4 import BeautifulSoup
 
 import gui
+
 
 # Search criteria
 user_agents_file = 'user_agents.txt'  # user-agent txt file path as string
@@ -122,7 +124,10 @@ def main(search_terms, search_locations):
                 records = search_results.find_all(attrs={'class': 'info'})
             except:  # todo narrow scope of exception
                 write_to_csv(search_term, search_location, answer_list)  # output data to csv file
-                print("Last seach had a Nonetype error. Rerun this State later.")
+                print("Unable to find any more records. Either:\n"
+                      "  1) there were geniunely no search results, or\n"
+                      "  2) the webpage failed to load additional records. \n\n"
+                      "If you believe there should have been more results, please rerun this State later.")
                 break
 
             answer_list += [contact_info(record) for record in records]
@@ -130,7 +135,7 @@ def main(search_terms, search_locations):
             if not page_nav.find(attrs={'class': 'next ajax-page'}):
                 write_to_csv(search_term, search_location, answer_list)  # output data to csv file
                 break
-    print('\nSearches completed.  Files will appear upon exiting the program.\nYou may now run another search or exit.')
+    print('\nSearches completed. You may now run another search or exit.')
 
 if __name__ == '__main__':
     gui.gui()
