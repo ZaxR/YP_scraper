@@ -3,8 +3,15 @@ import itertools
 import random
 import sys
 import time
+
 import requests
 from bs4 import BeautifulSoup
+
+import gui
+
+# Search criteria
+user_agents_file = 'user_agents.txt'  # user-agent txt file path as string
+proxies_file = 'proxies.txt'  # proxies txt file path as string
 
 # Turns list of lists into csv file
 def write_to_csv(search_term, search_location, answer_list):  # todo handle PermissionError when file locked
@@ -89,7 +96,7 @@ def contact_info(record):
     return [contact_detail(attrs) for attrs in elements]
 
 # Main program
-def main():
+def main(search_terms, search_locations):
     # Import proxies and user agents files as lists and select initial proxy and user agent
     proxies_list = load_proxies(proxies_file)
     uas_list = load_uas(user_agents_file)
@@ -123,15 +130,7 @@ def main():
             if not page_nav.find(attrs={'class': 'next ajax-page'}):
                 write_to_csv(search_term, search_location, answer_list)  # output data to csv file
                 break
+    print('\nSearches completed.  Files will appear upon exiting the program.\nYou may now run another search or exit.')
 
 if __name__ == '__main__':
-    # Search criteria
-    user_agents_file = 'user_agents.txt'  # user-agent txt file path as string
-    proxies_file = 'proxies.txt'  # proxies txt file path as string
-    search_terms = ["Pharmacies", ]
-    search_locations = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS',
-                        'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY',
-                        'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV',
-                        'WI', 'WY']
-
-    main()
+    gui.gui()
