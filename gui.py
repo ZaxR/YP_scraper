@@ -30,7 +30,7 @@ class gui(tk.Frame):
                                  'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC',
                                  'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT',
                                  'VT', 'VA', 'WA', 'WV', 'WI', 'WY']
-        self.locations = []
+        self.locations = {}
         self.create_locations()
         # todo Have all states toggled on by default
 
@@ -64,25 +64,32 @@ class gui(tk.Frame):
 
     def create_locations(self, c=10, r=0):
         for index, item in enumerate(self.search_locations):
-            self.locations.append(tk.Checkbutton(self.root, text=item)) #tk and ttk options; every diff
             r += 1
             if index > 0 and index % 10 == 0:
                 c += 1
                 r -= 10
-            self.locations[index].grid(column=c, row=r)
+            self.var = tk.IntVar()  # need self.var to be self.var1, self.var2 ...
+            tk.Checkbutton(self.root, text=item, variable=self.var,
+                           command=lambda item=item, var=self.var: self.get_checkbox_value(item, var)).grid(column=c, row=r)
+
+    def get_checkbox_value(self, state_name , var_value):
+        if var_value.get() == 1:
+            self.locations[state_name] = var_value.get()
+        elif var_value.get() == 0:
+            self.locations.pop(state_name,0)
 
     def select_all(self):
-        print(self.locations)
         for location in self.locations:
             location.select()
 
     def deselect_all(self):
-        print(self.locations)
         for location in self.locations:
             location.deselect()
 
     def run_main(self):
-        YP_scrape.main(self.search_terms)
+        print('Searching the following terms:{0}'.format(self.search_terms))
+        print('Searching the following locations:{0}'.format(self.locations))
+        YP_scrape.main(self.search_terms, self.locations)
 
     def start(self):
         print('Welcome to YP_scraper!')
