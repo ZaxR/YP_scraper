@@ -260,6 +260,7 @@ class Scraper:
                           "  1) there were geniunely no search results, or\n"
                           "  2) the webpage failed to load additional records. \n\n"
                           "If you believe there should have been more results, please rerun this State later.")
+                    break
 
                 answer_list += [self.contact_info(record) for record in records]
 
