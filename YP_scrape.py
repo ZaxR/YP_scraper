@@ -120,12 +120,14 @@ def main(search_terms, search_locations):
             search_results = soup.find(attrs={'class': 'search-results organic'})
             page_nav = soup.find(attrs={'class': 'pagination'})
 
-            try:
+            if page_nav is not None:
                 records = search_results.find_all(attrs={'class': 'info'})
-            except:  # todo narrow scope of exception
+            elif i==1:
+                print("No results found.")
+            else:
                 write_to_csv(search_term, search_location, answer_list)  # output data to csv file
                 print("Unable to find any more records. Either:\n"
-                      "  1) there were geniunely no search results, or\n"
+                      "  1) there were geniunely no more search results, or\n"
                       "  2) the webpage failed to load additional records. \n\n"
                       "If you believe there should have been more results, please rerun this State later.")
                 break
