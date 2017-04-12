@@ -120,7 +120,7 @@ def main(search_terms, search_locations):
             search_results = soup.find(attrs={'class': 'search-results organic'})
             page_nav = soup.find(attrs={'class': 'pagination'})
 
-            if page_nav is not None:
+            if search_results is not None:
                 records = search_results.find_all(attrs={'class': 'info'})
             elif i==1:
                 print("No results found.")
