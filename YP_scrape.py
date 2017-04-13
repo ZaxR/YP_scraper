@@ -4,6 +4,7 @@ import itertools
 import random
 import re
 import sys
+import threading
 import time
 import tkinter as tk
 from tkinter import ttk
@@ -13,20 +14,24 @@ import requests
 from bs4 import BeautifulSoup
 
 
-class GUI(tk.Frame):
+class GUI(tk.Frame, threading.Thread):
     def __init__(self):
+        threading.Thread.__init__(self)
         self.root = tk.Tk()
         self.root.geometry()
         self.root.wm_title("YP_scraper")
 
         tk.Frame.__init__(self, self.root)
+
         self.create_widgets()
+        self.start()
 
     def create_widgets(self):
 
-        # Widget set-up for Textbox to enter search terms
-        self.searchframe = ttk.Labelframe(self.root, padding=(6, 8, 12, 12), text='Locations')
+        # Widget set-up for frame, textbox, and save button re: entering search terms
+        self.searchframe = ttk.Labelframe(self.root, padding=(6, 8, 12, 12), text='Search Terms')
         self.searchframe.grid(column=0, columnspan=10, row=0, rowspan=10, sticky='nsew')
+
 
         self.search_terms_box = tk.Text(self.searchframe, width=30, height=15, wrap="word")
         self.search_terms_box.grid(column=0, row=0, columnspan=10)
@@ -61,9 +66,14 @@ class GUI(tk.Frame):
         # todo allows to add (insert)/remove (delete?) proxies from scrollable listbox?
 
 
-        # Widget set-up for messages from program
-        # todo set up scrollable listbox?
-        # todo alternatively, current term, location, time elapsed, progressbar
+        # Widget set-up textbox for messages from program
+        self.text_box = tk.Text(self.root, wrap='word')
+        self.text_box.grid(column=0, columnspan=18, row=19)
+        sys.stdout = StdoutRedirector(self.text_box)
+
+        self.scrollb = tk.Scrollbar(self.root, command=self.text_box.yview)
+        self.scrollb.grid(row=19, column=18, sticky='nsew')
+        self.text_box['yscrollcommand'] = self.scrollb.set
 
         # Widget set-up for Run button
         run_program = tk.Button(self.root, text='Run', height=8, width=20, bg='green', command=self.run_main)
@@ -79,12 +89,17 @@ class GUI(tk.Frame):
         self.progressframe.grid(column=16, columnspan=2, row=5, rowspan=5, sticky='nsew')
 
         info = (u"Current Keyword", u"Current Location", u"Records Scraped",
-                u"Time Elapsed", u"Percentage Complete")
+                u"Time Elapsed", u"I'm the entertainment")
         for i, item in enumerate(info):
             ttk.Label(self.progressframe, text=u"{0}: ".format(item)).grid(in_=self.progressframe, column=0, row=i, sticky='w')
-        self.progressbar = ttk.Progressbar(self.progressframe, orient="horizontal", length=200, mode="indeterminate").grid(column=1, row=4)
 
-    def save_search(self):  # todo if no search term is saved, TypeError: Can't convert 'int' object to str implicitly
+        self.progress_box = tk.Text(self.progressframe, wrap='none', width=20, height=5)
+        self.progress_box.grid(column=1, row=0, rowspan=4)
+
+        self.progressbar = ttk.Progressbar(self.progressframe, orient="horizontal", length=100, mode="indeterminate")
+        self.progressbar.grid(column=1, row=4)
+
+    def save_search(self):
         raw_search_terms = self.search_terms_box.get('1.0', 'end-1c')
         self.search_terms = re.split(",[ ]*", re.sub("\n", '', re.sub(' +', ' ', raw_search_terms)))
         print('Search terms set to: {0}'.format(self.search_terms))
@@ -125,10 +140,11 @@ class GUI(tk.Frame):
             return
         self.locations = collections.OrderedDict(sorted(self.locations.items()))
         print('Searching the following: \n'
-              'Terms:{0} \nLocations:{1}'.format(self.search_terms,[k for k in self.locations]))
-        Scraper(self.search_terms, self.locations)
+              'Terms:{0} \nLocations:{1}'.format(self.search_terms, [k for k in self.locations]))
+        Scraper(self.root, self.text_box, self.progress_box, self.progressbar, self.search_terms, self.locations)
 
     def stop_main(self):
+        print("The stop button doesn't work yet.  Please exit the whole program and reopen to begin again.")
         pass
 
     def start(self):
@@ -136,10 +152,49 @@ class GUI(tk.Frame):
         self.root.mainloop()
 
 
-class Scraper:
-    def __init__(self, search_terms, locations):
+class IORedirector(object):
+    '''A general class for redirecting I/O to this Text widget.'''
+
+    def __init__(self, text_area):
+        self.text_area = text_area
+
+
+class StdoutRedirector(IORedirector):
+    '''A class for redirecting stdout to this Text widget.'''
+
+    def write(self, message):
+        self.text_area.config(state="normal")
+        self.text_area.insert("end", message)
+        self.text_area.config(state="disabled")
+
+    def flush(self):
+        pass
+
+
+class StdoutRedirector2(IORedirector):
+    '''A class for redirecting stdout to this Text widget.'''
+
+    def write(self, message):
+        self.text_area.config(state="normal")
+        self.text_area.delete("5.0", "end")
+        self.text_area.insert("1.0", message)
+        self.text_area.config(state="disabled")
+
+    def flush(self):
+        pass
+
+
+class Scraper(threading.Thread):
+    def __init__(self, gui, text_box, progress_box, pb, search_terms, locations):
+        self.thread = threading.Thread.__init__(self)
+        self.start()
         self.search_terms = search_terms
         self.locations = locations
+
+        self.progressbar = pb
+        self.root = gui
+        self.progress_box = progress_box
+        self.text_box = text_box
 
         # Search criteria
         self.user_agents_file = 'user_agents.txt'  # user-agent txt file path as string
@@ -167,7 +222,7 @@ class Scraper:
             return [proxy.strip() for proxy in proxies.readlines() if proxy]
 
     # Pulls new random proxy from the list
-    def next_proxy(self, proxies_list):  # todo improve to ensure the same IP isn't used twice in a row; do not run list in order
+    def next_proxy(self, proxies_list):  # todo improve so same IP isn't used twice in a row; do not run list in order
         return random.choice(proxies_list)
 
     # Initial loading of user agents from file
@@ -190,6 +245,8 @@ class Scraper:
         return template.format(search_term=search_term, location=location, page_number=page_number)
 
     def pull_request(self, url, proxy, header, proxies_list):
+        self.progressbar.step(20)
+        self.root.update()
         for _ in range(5):
             try:
                 r = requests.get(url, headers=header, proxies=proxy, timeout=15)
@@ -197,7 +254,8 @@ class Scraper:
                     raise requests.exceptions.HTTPError
                 return r
             except requests.exceptions.HTTPError as h:
-                print('Error: ', h.response.status_code, '. Trying again.')
+                print('Error: {0}. The proxy and user agent used for the search were {1} and {2}, respectively.'
+                      'Changing things up and trying again.'.format(h.response.status_code, proxy, header))
             except requests.exceptions.Timeout as t:
                 print('Uh oh: ', t, '. Retrying now.')
             except requests.exceptions.RequestException as e:
@@ -239,11 +297,16 @@ class Scraper:
             answer_list = []
             i = 0
             while True:
+                self.root.update()
                 i += 1
+
+                sys.stdout = StdoutRedirector2(self.progress_box)
+                print("Coming soon", "\n", " ", i, "\n", search_location, "\n", search_term)
+                sys.stdout = StdoutRedirector(self.text_box)
+
                 url = self.urls(search_term, search_location, i)
                 proxy = {"http": self.next_proxy(proxies_list)}  # loads random proxy
                 ua = self.next_ua(uas_list)  # loads random user-agent
-                print(i, url, proxy, ua)  # to visual progress
                 header = {
                     "Connection": "close",  # cover tracks
                     "User-Agent": ua}  # http://webaim.org/blog/user-agent-string-history/
@@ -252,20 +315,21 @@ class Scraper:
                 search_results = soup.find(attrs={'class': 'search-results organic'})
                 page_nav = soup.find(attrs={'class': 'pagination'})
 
-                try:
+                if search_results is not None:
                     records = search_results.find_all(attrs={'class': 'info'})
-                except:  # todo narrow scope of exception
-                    self.write_to_csv(search_term, search_location, answer_list)  # output data to csv file
+                    answer_list += [self.contact_info(record) for record in records]
+                elif i == 1:
+                    print("No results found.")
+                else:
+                    self.write_to_csv(search_term, search_location, answer_list)
                     print("Unable to find any more records. Either:\n"
-                          "  1) there were geniunely no search results, or\n"
+                          "  1) there were geniunely no more search results, or\n"
                           "  2) the webpage failed to load additional records. \n\n"
                           "If you believe there should have been more results, please rerun this State later.")
                     break
 
-                answer_list += [self.contact_info(record) for record in records]
-
                 if not page_nav.find(attrs={'class': 'next ajax-page'}):
-                    self.write_to_csv(search_term, search_location, answer_list)  # output data to csv file
+                    self.write_to_csv(search_term, search_location, answer_list)
                     break
 
         print('\nSearches completed. You may now run another search or exit.')
