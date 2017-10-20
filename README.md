@@ -1,5 +1,5 @@
 # YP_scraper  
-Yellow Pages web scraper. Uses Python (requests and beautifulsoup) and outputs to csv. Uses random proxy and user-agent for each request.
+Yellow Pages web scraper webapp. Uses Flask, requests, and beautifulsoup. Searches output to csvs for users. Uses random proxy and user-agent for each request.
 
 ### Roadmap:
 * Add logging
@@ -12,11 +12,9 @@ Yellow Pages web scraper. Uses Python (requests and beautifulsoup) and outputs t
   * Need to remember last successful iteration prior to exception 
   * Add duplicate record handling
   * Add record counter
-* Add GUI
-  * Add selectors for keyword(s), location(s), field(s), proxy/user-agent sources, and csv save location
-  * Add output options: one file, one file per term, one file per term+location
-  * Design cleaner "Progress" visualization for current keyword, current location, records scraped, and time elapsed
-  * Add task scheduler, start button, and stop button
+* Improve GUI
+  * Visual "Progress" for current keyword, current location, records scraped, and time elapsed
+* Add task scheduler, start button, and stop button
 * Freeze program as an standalone executable -or- deploy as webapp
 * Miscellaneous
   * Add handling for writing files when files can't be written (such as if a user already has the file in question open)
