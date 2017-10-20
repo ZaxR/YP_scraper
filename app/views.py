@@ -24,18 +24,18 @@ def index():
         search_location = form.search_location.data
         run_scrape(search_term, search_location)
 
-        query = models.Records.query.all()
-        query2 = [[getattr(curr, column.name) for column in models.Records.__mapper__.columns] for curr in query]
-        output = StringIO()
-        writer = csv.writer(output)
-        csvfile = writer.writerows(query2)
+        # csv.write requires StringIO
+        query_all = [[getattr(curr, column.name) for column in models.Records.__mapper__.columns] for curr in models.Records.query.all()]
+        file_like = StringIO()
+        csv.writer(file_like).writerows(query_all)
 
-        answer = BytesIO()
-        answer.write(output.getvalue().encode('utf-8'))
-        answer.seek(0)
-        output.close()
+        # send_file requires BytesIO()
+        output_csv = BytesIO()
+        output_csv.write(file_like.getvalue().encode('utf-8'))
+        output_csv.seek(0)
+        file_like.close()
 
-        return send_file(answer,attachment_filename="YP_" + search_term + "_" + search_location + ".csv",
+        return send_file(output_csv,attachment_filename="YP_" + search_term + "_" + search_location + ".csv",
                          as_attachment=True, mimetype='text/csv')
 
     return render_template('index.html', form=form)
@@ -156,12 +156,18 @@ def run_scrape(search_term, search_location):
         search_results = soup.find(attrs={'class': 'search-results organic'})
         page_nav = soup.find(attrs={'class': 'pagination'})
 
-        try:
+        if search_results is not None:
             records = search_results.find_all(attrs={'class': 'info'})
-        except:  # todo narrow scope of exception
+        elif i == 1:
+            print("No results found.")
+        else:
             db.session.bulk_save_objects(answer_list)
             db.session.commit()
-            print("Last seach had a Nonetype error. Rerun this State later.")
+            print("Unable to find any more records. Either:\n"
+                  "  1) there were geniunely no search results, or\n"
+                  "  1) there were geniunely no more search results, or\n"
+                  "  2) the webpage failed to load additional records. \n\n"
+                  "If you believe there should have been more results, please rerun this State later.")
             break
 
         answer_list += [contact_info(record) for record in records]

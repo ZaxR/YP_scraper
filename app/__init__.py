@@ -8,8 +8,6 @@ db = SQLAlchemy(app)
 
 from app import views, models
 
-# for k in db.get_binds():
-#     print(k)
-
+# Start fresh records table and create all missing tables
 models.Records.__table__.drop(db.session.bind, checkfirst=True)
 db.create_all()
