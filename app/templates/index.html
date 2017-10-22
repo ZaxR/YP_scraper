@@ -1,12 +1,87 @@
-<html>
-    <body>
-        <form action="" method="POST">
-            <fieldset>
-                <legend>Search Parameters:</legend>
-                {{form.search_term.label}}{{form.search_term}}<br>
-                {{form.search_location.label}}{{form.search_location}}<br>
-                {{form.search}}
-            </fieldset>
-        </form>
-    </body>
-</html>
+<!-- Bootstrap js requirements -->
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+
+<script src="{{url_for('static', filename='custom.js')}}"></script>
+
+{% extends "bootstrap/base.html" %}
+
+
+{% block body %}
+
+<div class="content-wrapper">
+    <div class="container">
+
+        <div class="row">
+            <div class="col-md-12">
+                <h4 class="page-head-line">YP Scraper</h4>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="notice-board">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Search Parameters
+                        </div>
+
+                        <div class="panel-body">
+                            <form class="form-horizontal" action="" method="POST">
+                                <div class="panel-footer">
+                                    <input type="submit" name="submit" class="form-control">
+                                </div>
+                                <table class="table table-bordered table-hover" id="tableAddRow">
+                                    <thead>
+                                        <tr>
+                                            <th>Term</th>
+                                            <th>Locations</th>
+                                            <th style="width:10px"><span class="glyphicon glyphicon-plus addBtn" id="addBtn_0"></span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr id="tr_0">
+                                            <td>{{form.search_terms(class_="form-control")}}</td>
+                                            <td>{{form.search_locations(class_="form-control")}}</td>
+                                            <td><span class="glyphicon glyphicon-minus addBtnRemove" id="addBtnRemove_0"></span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="alert alert-danger">
+                    Note: xxx
+                </div>
+                <hr />
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

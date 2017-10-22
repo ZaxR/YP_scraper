@@ -14,7 +14,6 @@ class Records(db.Model):
     website = db.Column(db.String(), index=True, unique=False)
 
     def __init__(self, name, phone, address, city, state, zip_code, website):
-        # self.id = id
         self.name = name
         self.phone = phone
         self.address = address
@@ -22,6 +21,21 @@ class Records(db.Model):
         self.state = state
         self.zip_code = zip_code
         self.website = website
+
+
+class SearchHistory(db.Model):
+    __tablename__ = "search_history"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.String(30), index=True, unique=False)
+    term = db.Column(db.String(17), index=True, unique=False)
+    location = db.Column(db.String(30), index=True, unique=False)
+    username = db.Column(db.String(30), index=True, unique=False)
+
+    def __init__(self, date, term, location, username):
+        self.date = date
+        self.term = term
+        self.location = location
+        self.username = username
 
 
 class Users(db.Model):

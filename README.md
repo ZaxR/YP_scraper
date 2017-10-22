@@ -1,20 +1,26 @@
 # YP_scraper  
-Yellow Pages web scraper webapp. Uses Flask, requests, and beautifulsoup. Searches output to csvs for users. Uses random proxy and user-agent for each request.
+Yellow Pages scraper webapp made with Flask, requests, and beautifulsoup. Outputs results to users as csvs. Uses random proxy and user-agent for each request.
+
+### Known Bugs:
+* Remove trailing ',' after city name; rstrip(',') not working
+* Change wtform to dynamic number of inputs; update js
 
 ### Roadmap:
+* Handle multiple search criteria with cities
+* Add headers back to csv output; don't output id column
+* Display output to screen
+* Update db record table clearing/csv outputting logic
+   * Move download csv to a button?
+* Deploy on Heroku
+
+### Future Features:
+* Add secure login/registration
+* Have route to view most recent/search past searches
 * Add logging
-  * Need a way to to recognize and rerun failed next page attempts
-  * Need a way to gather data to analyze program weaknesses
-* Add data validation
-  * User inputs can currently be invalid
-* Improve proxy block detection and cycling
-* Replace list of list data structure with a database
-  * Need to remember last successful iteration prior to exception 
-  * Add duplicate record handling
-  * Add record counter
-* Improve GUI
-  * Visual "Progress" for current keyword, current location, records scraped, and time elapsed
-* Add task scheduler, start button, and stop button
-* Freeze program as an standalone executable -or- deploy as webapp
-* Miscellaneous
-  * Add handling for writing files when files can't be written (such as if a user already has the file in question open)
+* Add visualization of progress (ajax)
+* Add manual proxy selection (including add/delete)
+* Optional e-mail results
+* Choose save location of file
+* Multithreading
+* A "stop" button for active search
+* Add a menu with a link to github, an about section, donate button?
