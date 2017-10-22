@@ -3,11 +3,11 @@ Yellow Pages scraper webapp made with Flask, requests, and beautifulsoup. Output
 
 ### Known Bugs:
 * Remove trailing ',' after city name; rstrip(',') not working
+* Have website actually be the url and/or link
 * Change wtform to dynamic number of inputs; update js
 
 ### Roadmap:
 * Handle multiple search criteria with cities
-* Add headers back to csv output; don't output id column
 * Display output to screen
 * Update db record table clearing/csv outputting logic
    * Move download csv to a button?

@@ -6,7 +6,7 @@ import requests
 import time
 from bs4 import BeautifulSoup
 from datetime import date
-from flask import Flask, flash, redirect, render_template, request, send_file, url_for
+from flask import flash, render_template, request, send_file, url_for
 from flask_login import login_required
 from io import StringIO, BytesIO
 
@@ -14,13 +14,13 @@ from io import StringIO, BytesIO
 from app import app, db, models
 from app.forms import ScrapeForm
 
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = ScrapeForm(request.form)
     if form.validate_on_submit():
         models.Records.__table__.drop(db.session.bind, checkfirst=True)
         models.Records.__table__.create(db.session.bind, checkfirst=True)
-
 
         # takes comma separated terms and semicolon separated bunches (separated by commas) of locations
         search_terms, search_locations = scrub_parameters(form.search_terms.data, form.search_locations.data)
@@ -33,21 +33,24 @@ def index():
                 run_scrape(term, loc)
 
         # csv.write requires StringIO
-        query_all = [[getattr(curr, column.name) for column in models.Records.__mapper__.columns] for curr in models.Records.query.all()]
+        query_all = [[getattr(curr, column.name)
+                      for column in models.Records.__mapper__.columns]
+                     for curr in models.Records.query.all()]
         if query_all:
             file_like = StringIO()
+            csv.writer(file_like).writerow(["Id", "Name", "Phone Number", "Address", "City", "State", "Zip Code", "Website"])
             csv.writer(file_like).writerows(query_all)
 
             # send_file requires BytesIO()
             output_csv = BytesIO()
-            output_csv.write(file_like.getvalue().encode('ascii', 'ignore'))# utf-8 leaves in Â
+            output_csv.write(file_like.getvalue().encode('ascii', 'ignore'))  # utf-8 leaves in Â
             output_csv.seek(0)
             file_like.close()
 
             fn_term = 'various_terms' if len(search_terms) > 1 else str(search_terms[0])
             fn_loc = 'various_locations' if len(search_locations) > 1 or len(search_locations[0]) > 1 else str(search_locations[0][0])
 
-            return send_file(output_csv,attachment_filename="YP_" + fn_term + "_" + fn_loc + ".csv",
+            return send_file(output_csv, attachment_filename="YP_" + fn_term + "_" + fn_loc + ".csv",
                              as_attachment=True, mimetype='text/csv')
 
         else:
@@ -62,13 +65,14 @@ def index():
 def scrub_parameters(search_terms, search_locations):
     search_terms = re.split('[, ]+', re.sub('[^a-zA-Z0-9, ]', '', search_terms))
     search_locations = [[re.sub('[^a-zA-Z0-9]', '', j) for j in i.split(',')] for i in search_locations.split(';')]
-    for c, i in enumerate(search_locations):
-        if i == 'ALL':
-            search_locations[c] = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI',
-                                 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
-                                 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC',
-                                 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT',
-                                 'VT', 'VA', 'WA', 'WV', 'WI', 'WY']
+    for c, loc_list in enumerate(search_locations):
+        for c2, loc in enumerate(loc_list):
+            if loc == 'ALL':
+                search_locations[c2] = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI',
+                                       'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
+                                       'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC',
+                                       'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT',
+                                       'VT', 'VA', 'WA', 'WV', 'WI', 'WY']
 
     return search_terms, search_locations
 
@@ -82,9 +86,11 @@ def load_proxies(proxies_file):  # todo add default value
     with open(proxies_file, 'rb') as proxies:
         return [proxy.strip() for proxy in proxies.readlines() if proxy]
 
+
 # Pulls new random proxy from the list
 def next_proxy(proxies_list):  # todo improve to ensure the same IP isn't used twice in a row; do not run list in order
     return random.choice(proxies_list)
+
 
 # Initial loading of user agents from file
 def load_uas(user_agents_file):  # todo add default value
@@ -95,15 +101,18 @@ def load_uas(user_agents_file):  # todo add default value
     with open(user_agents_file, 'rb') as uaf:
         return [ua.strip() for ua in uaf.readlines() if ua]
 
+
 # Pulls new random user agent from the list
 def next_ua(uas_list):
     return random.choice(uas_list)
+
 
 # Creates url from search criteria and current page
 def urls(search_term, location, page_number):
     template = (
         'http://www.yellowpages.com/search?search_terms={search_term}&geo_location_terms={location}&page={page_number}')
     return template.format(search_term=search_term, location=location, page_number=page_number)
+
 
 def pull_request(url, proxy, header, proxies_list):
     for _ in range(5):
@@ -127,6 +136,7 @@ def pull_request(url, proxy, header, proxies_list):
     print('Ok, I give up.')
     return
 
+
 # Finds all the contact information for a record
 def contact_info(record):
     def contact_detail(attrs):
@@ -144,6 +154,7 @@ def contact_info(record):
     ]
 
     return models.Records(*[contact_detail(attrs) for attrs in elements])
+
 
 # Main program
 def run_scrape(search_term, search_location):
