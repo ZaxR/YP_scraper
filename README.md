@@ -11,17 +11,17 @@ Yellow Pages scraper webapp made with Flask, requests, and beautifulsoup. Output
 * Display output to screen
 * Prettify
 * Update file naming convention to prevent very long file names
+* Prevent searches from exceeding memory/space; limit search terms/locations?
 * Write tests
 
 ### Future Features:
 * Add secure login/registration
+  * Have route to view most recent/search past searches
+  * Optional e-mail results? Or notification e-mail?
 * Add visualization of progress (ajax)
 * A "stop" button for active search
-* Have route to view most recent/search past searches
 * Add logging
 * Add manual proxy selection (including add/delete)
-* Optional e-mail results
 * Choose save location of file
 * Multithreading
-* Prevent searches from exceeding memory/space
 * Add a menu with a link to github, an about section, donate button?
