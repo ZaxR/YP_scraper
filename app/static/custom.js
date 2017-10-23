@@ -1,22 +1,41 @@
 $(document).ready(function () {
-    $('.addBtn').on('click', function () {
-        //var trID;
-        //trID = $(this).closest('tr'); // table row ID
-        addTableRow();
+    var counter = 0;
+
+    $(".addBtn").on("click", function () {
+        var newRow = $("<tr>");
+        var cols = "";
+
+        cols += '<td><input type="text" class="form-control" name="search_terms"/></td>';
+        cols += '<td><input type="text" class="form-control" name="search_locations"/></td>';
+
+        cols += '<td><span class="glyphicon glyphicon-minus addBtnRemove"></span></td>';
+
+        newRow.append(cols);
+        $("#tableAddRow").append(newRow);
+        counter++;
     });
-     $('.addBtnRemove').click(function () {
-        $(this).closest('tr').remove();
-    })
-    var i = 1;
-    function addTableRow()
-    {
-        var tempTr = $('<tr><td>{{form.search_terms(class_="form-control")}}</td><td>{{form.search_terms(class_="form-control")}}</td><td><span class="glyphicon glyphicon-minus addBtnRemove" id="addBtn_' + i + '"></span></td></tr>').on('click', function () {
-           //$(this).closest('tr').remove();
-           $(document.body).on('click', '.TreatmentHistoryRemove', function (e) {
-                $(this).closest('tr').remove();
-            });
-        });
-        $("#tableAddRow").append(tempTr)
-        i++;
-    }
+
+
+
+    $("#tableAddRow").on("click", ".addBtnRemove", function (event) {
+        $(this).closest("tr").remove();
+        counter -= 1
+    });
+
+
 });
+
+
+
+function calculateRow(row) {
+    var price = +row.find('input[name^="price"]').val();
+
+}
+
+function calculateGrandTotal() {
+    var grandTotal = 0;
+    $("table.order-list").find('input[name^="price"]').each(function () {
+        grandTotal += +$(this).val();
+    });
+    $("#grandtotal").text(grandTotal.toFixed(2));
+}

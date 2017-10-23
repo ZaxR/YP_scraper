@@ -4,23 +4,24 @@ Yellow Pages scraper webapp made with Flask, requests, and beautifulsoup. Output
 ### Known Bugs:
 * Remove trailing ',' after city name; rstrip(',') not working
 * Have website actually be the url and/or link
-* Change wtform to dynamic number of inputs; update js
+* wtforms validation isn't working; temporarily using custom validation
 
 ### Roadmap:
-* Handle multiple search criteria with cities
+* Improve custom validation
 * Display output to screen
-* Update db record table clearing/csv outputting logic
-   * Move download csv to a button?
-* Deploy on Heroku
+* Prettify
+* Update file naming convention to prevent very long file names
+* Write tests
 
 ### Future Features:
 * Add secure login/registration
+* Add visualization of progress (ajax)
+* A "stop" button for active search
 * Have route to view most recent/search past searches
 * Add logging
-* Add visualization of progress (ajax)
 * Add manual proxy selection (including add/delete)
 * Optional e-mail results
 * Choose save location of file
 * Multithreading
-* A "stop" button for active search
+* Prevent searches from exceeding memory/space
 * Add a menu with a link to github, an about section, donate button?

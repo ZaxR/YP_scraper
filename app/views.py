@@ -18,25 +18,41 @@ from app.forms import ScrapeForm
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = ScrapeForm(request.form)
-    if form.validate_on_submit():
+    if request.method == 'POST':  # form.validate_on_submit():
         models.Records.__table__.drop(db.session.bind, checkfirst=True)
         models.Records.__table__.create(db.session.bind, checkfirst=True)
 
-        # takes comma separated terms and semicolon separated bunches (separated by commas) of locations
-        search_terms, search_locations = scrub_parameters(form.search_terms.data, form.search_locations.data)
-        for term, loc_list in zip(search_terms, search_locations):
-            for loc in loc_list:
-                # add search to search history
-                db.session.add(models.SearchHistory(date.today(), term, loc, 'Anonymous'))  # todo update 'Anonymous to username if logged it
-                db.session.commit()
+        # get raw input
+        search_terms = request.form.getlist('search_terms')
+        search_locations = request.form.getlist('search_locations')
 
-                run_scrape(term, loc)
+        # takes semicolon-separated terms and semicolon-separated locations
+        search_terms, search_locations = scrub_parameters(search_terms, search_locations)
 
-        # csv.write requires StringIO
+        # Custom validation until wtforms with FieldList solution found
+        # todo give more specific flash output. Auto-delete blank rows?
+        for g in [search_terms, search_locations]:
+            for s in g:
+                for i in s:
+                    if i == '':
+                        flash('All fields for created rows are required. Please delete any blank rows and try again.', category='danger')
+                        return render_template('index.html', form=form)
+
+
+        for term_list, loc_list in zip(search_terms, search_locations):
+            for term in term_list:
+                for loc in loc_list:
+                    # add search to search history
+                    db.session.add(models.SearchHistory(date.today(), term, loc, 'Anonymous'))  # todo update 'Anonymous to username if logged it
+                    db.session.commit()
+
+                    run_scrape(term, loc)
+
         query_all = [[getattr(curr, column.name)
                       for column in models.Records.__mapper__.columns]
                      for curr in models.Records.query.all()]
         if query_all:
+            # csv.write requires StringIO
             file_like = StringIO()
             csv.writer(file_like).writerow(["Id", "Name", "Phone Number", "Address", "City", "State", "Zip Code", "Website"])
             csv.writer(file_like).writerows(query_all)
@@ -47,8 +63,8 @@ def index():
             output_csv.seek(0)
             file_like.close()
 
-            fn_term = 'various_terms' if len(search_terms) > 1 else str(search_terms[0])
-            fn_loc = 'various_locations' if len(search_locations) > 1 or len(search_locations[0]) > 1 else str(search_locations[0][0])
+            fn_term = 'multi-term' if len(search_terms) > 1 else str(search_terms[0])
+            fn_loc = 'multi-location' if len(search_locations) > 1 else str(search_locations[0])
 
             return send_file(output_csv, attachment_filename="YP_" + fn_term + "_" + fn_loc + ".csv",
                              as_attachment=True, mimetype='text/csv')
@@ -56,19 +72,20 @@ def index():
         else:
             flash('No results found', category='info')
 
-    elif request.method == 'POST':
-        flash('All fields are required. Please try again.', category='danger')
-
     return render_template('index.html', form=form)
 
 
 def scrub_parameters(search_terms, search_locations):
-    search_terms = re.split('[, ]+', re.sub('[^a-zA-Z0-9, ]', '', search_terms))
-    search_locations = [[re.sub('[^a-zA-Z0-9]', '', j) for j in i.split(',')] for i in search_locations.split(';')]
+    for c, term_group in enumerate(search_terms):
+        search_terms[c] = set([i.strip() for i in re.split('[;]+', re.sub('[^a-zA-Z0-9; ]', '', term_group))])
+
+    for c, loc_group in enumerate(search_locations):
+        search_locations[c] = set([i.strip() for i in re.split('[;]+', re.sub('[^a-zA-Z0-9;, ]', '', loc_group))])
+
     for c, loc_list in enumerate(search_locations):
         for c2, loc in enumerate(loc_list):
             if loc == 'ALL':
-                search_locations[c2] = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI',
+                search_locations[c] = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI',
                                        'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
                                        'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC',
                                        'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT',
@@ -118,9 +135,10 @@ def pull_request(url, proxy, header, proxies_list):
     for _ in range(5):
         try:
             r = requests.get(url, headers=header, proxies=proxy, timeout=15)
-            if r.status_code != 200:
-                raise requests.exceptions.HTTPError
-            return r
+            if r.status_code == 200:
+                return r
+            # retry any other code, because various status codes are actually honeypots.
+            print('Last attempt failed, with status code: {}. Trying again.'.format(r.status_code))
         except requests.exceptions.HTTPError as h:
             print('Error: ', h.response.status_code, '. Trying again.')
         except requests.exceptions.Timeout as t:
@@ -130,7 +148,7 @@ def pull_request(url, proxy, header, proxies_list):
             return
 
         time.sleep(15)
-        proxy = {"http": next_proxy(proxies_list)}  # loads random proxy
+        # todo fix proxy = {"http": next_proxy(proxies_list)}  to load random proxy
 #       # todo load random user-agent
 
     print('Ok, I give up.')
@@ -194,8 +212,8 @@ def run_scrape(search_term, search_location):
             db.session.bulk_save_objects(answer_list)
             db.session.commit()
             print("Unable to find any more records. Either:\n"
-                  "  1) there were geniunely no search results, or\n"
-                  "  1) there were geniunely no more search results, or\n"
+                  "  1) there were genuinely no search results, or\n"
+                  "  1) there were genuinely no more search results, or\n"
                   "  2) the webpage failed to load additional records. \n\n"
                   "If you believe there should have been more results, please rerun this State later.")
             break
