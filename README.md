@@ -5,6 +5,7 @@ Yellow Pages scraper webapp made with Flask, requests, and beautifulsoup. Output
 * Remove trailing ',' after city name; rstrip(',') not working
 * Have website actually be the url and/or link
 * wtforms validation isn't working; temporarily using custom validation
+* flower monitoring not working locally; needs to be set up on host
 
 ### Roadmap:
 * Improve custom validation
@@ -19,8 +20,9 @@ Yellow Pages scraper webapp made with Flask, requests, and beautifulsoup. Output
   * Have route to view most recent/search past searches
   * Optional e-mail results? Or notification e-mail?
 * Add visualization of progress (ajax)
+  * Add routes for task/status by ID
 * A "stop" button for active search
-* Add logging
+* Add user-facing logging
 * Add manual proxy selection (including add/delete)
 * Choose save location of file
 * Multithreading

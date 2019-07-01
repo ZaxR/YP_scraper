@@ -1,0 +1,19 @@
+setup:
+  addons:
+    - plan: heroku-redis
+      as: redis
+build:
+  docker:
+    web: ./Dockerfile
+    # worker: ./Dockerfile
+run:
+  web: gunicorn -b 0.0.0.0:${PORT} app:app --worker-class gevent --preload --timeout 300
+  worker:
+    image: web
+    command: 
+      - celery -A app.celery worker --loglevel=info
+
+# ${PORT} is the Heroku-specified port. Can't be manually set, so make sure to read it for Flask, too.
+
+# After deployment, must scale workers:
+# heroku scale worker=1 --app yp-scraper
