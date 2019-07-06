@@ -73,7 +73,45 @@ def get_page(url, proxy, header, proxies_list):
     return
 
 
+"""
+from lxml import html
+
+parser = html.fromstring(response.text)
+parser.make_links_absolute(base_url)
+search_results_xpath = "//div[@class='search-results organic']//div[@class='v-card']" 
+search_results = parser.xpath(search_results_xpath)
+scraped_results += [contact_info(result) for result in search_results]
+
+def contact_info(result):
+    def contact_detail(detail_xpath):
+        detail = result.xpath(detail_xpath)
+        return detail if detail is not None else ""
+
+    elements = [
+        {'class': 'business-name'},
+        {'class': 'phones phone primary'},
+        {'class': 'street-address'},
+        {'class': 'locality'},
+        {'itemprop': 'addressRegion'},
+        {'itemprop': 'postalCode'},
+        {'class': 'links'},
+    ]
+
+    return models.Records(*[contact_detail(detail_xpath) for detail_xpath in elements])
+
+# ".//div[@class='info-section info-primary']//p[@class='adr']//span[@class='street-address']//text()"
+business_name = ".//a[@class='business-name']//text()"
+primary_phone = ".//div[@class='phones phone primary']//text()"
+street_address = ".//span[@class='street-address']//text()"
+locality = ".//span[@class='locality']//text()"
+region = ".//p[@class='adr']/span[3]//text()"
+postal_code = ".//p[@class='adr']/span[4]//text()"
+website = ".//div[@class='links']//a[contains(@class,'website')]/@href"
+"""
+
 # Finds all the contact information for a record
+
+
 def contact_info(record):
     def contact_detail(attrs):
         detail = record.find(attrs=attrs)
