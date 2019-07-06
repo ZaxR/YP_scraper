@@ -25,7 +25,7 @@ services:
     volumes:
       - ./.:/usr/src/app
       - ././logs:/usr/src/app/logs
-    command: celery -A app.celery worker --loglevel=info  --logfile=logs/celery.log
+    command: celery -A app.celery worker -O fair --loglevel=info  --logfile=logs/celery.log
     env_file:
       - .env
     depends_on:
