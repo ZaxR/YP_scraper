@@ -5,7 +5,7 @@ services:
   web:
     build: 
       context: .
-      dockerfile: ./compose/Dockerfile
+      dockerfile: Dockerfile
     image: web
     container_name: web
     ports:
