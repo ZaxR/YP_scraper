@@ -1,4 +1,3 @@
-beautifulsoup4
 celery
 Flask
 Flask-Bootstrap
@@ -11,6 +10,7 @@ Flask-WTF
 flower
 gevent
 gunicorn
+lxml
 redis
 requests
 SQLAlchemy

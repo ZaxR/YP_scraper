@@ -2,11 +2,11 @@
 import csv
 import os
 import random
-import requests
 import time
 from io import StringIO, BytesIO
 
-from bs4 import BeautifulSoup
+import requests
+from lxml import html
 
 from app import app, db, models
 
@@ -73,23 +73,45 @@ def get_page(url, proxy, header, proxies_list):
     return
 
 
-# Finds all the contact information for a record
-def contact_info(record):
-    def contact_detail(attrs):
-        detail = record.find(attrs=attrs)
-        return detail.text if detail is not None else ""
+def parse_contact_info(result):
+    """Parse all the contact information from a result.
 
-    elements = [
-        {'class': 'business-name'},
-        {'class': 'phones phone primary'},
-        {'class': 'street-address'},
-        {'class': 'locality'},
-        {'itemprop': 'addressRegion'},
-        {'itemprop': 'postalCode'},
-        {'class': 'links'},
-    ]
+    Note:
+        YellowPages.com use multiple XPath templates, seemingly to mess with scrapers,
+        which is pretty rediculous since they don't even offer a paid API alternative.
 
-    return models.Records(*[contact_detail(attrs) for attrs in elements])
+    """
+    def contact_detail(detail_xpath):
+        detail = result.xpath(detail_xpath)
+        return detail[0].strip(" ") if detail != [] else ""  # Will be [] if the xpath is bad
+
+    business_name = ".//a[@class='business-name']//text()"
+    primary_phone = ".//*[@class='phones phone primary']//text()"
+    street_address = ".//*[@class='street-address']//text()"
+    locality = ".//*[@class='locality']//text()"
+    # TODO: Fix that sometimes region is avail and not parsed, but zipcode fills in the region
+    region = ".//*[@class='adr']/span[3]//text()"
+    postal_code = ".//*[@class='adr']/span[4]//text()"
+    website = ".//*[@class='links']//a[contains(@class,'website')]/@href"
+
+    # TODO: Use k:v pairs to prevent record ordering issues
+    elements = [business_name, primary_phone, street_address, locality, region, postal_code, website]
+
+    contact_details = [contact_detail(detail_xpath) for detail_xpath in elements]
+
+    # Remove trailing ",\xa0" after city name when only city is in locality
+    # Unconfirmed if this can happen when region and postal code fields are blank
+    contact_details[3] = contact_details[3].split(",")[0]
+
+    # If we can't get region and postal_code, that info might be in locality
+    if not contact_details[4] and not contact_details[5]:
+        try:
+            contact_details[3], contact_details[4], contact_details[5] = [
+                i.rstrip(",") for i in contact_details[3].rsplit(" ", 2)]
+        except ValueError:
+            pass
+
+    return models.Records(*contact_details)
 
 
 # Main program
@@ -101,33 +123,34 @@ def run_scrape(search_term, search_location):
     proxies_list = load_proxies(os.path.join(resource_path, 'proxies.txt'))
     uas_list = load_uas(os.path.join(resource_path, 'user_agents.txt'))
 
-    answer_list = []
+    scraped_results = []
     i = 0
     while True:
         i += 1
         url = build_url(search_term, search_location, i)
         proxy = {"http": next_proxy(proxies_list)}  # loads random proxy
         ua = next_ua(uas_list)  # loads random user-agent
-        print(i, url, proxy, ua)  # to visual progress
+        print(i, url, proxy, ua)  # to visual progress for back-end logs
         header = {
             "Connection": "close",  # cover tracks
             "User-Agent": ua}  # http://webaim.org/blog/user-agent-string-history/
-        r = get_page(url, header, proxy, proxies_list)  # runs requests.get
-        if r:
-            soup = BeautifulSoup(r.text, "html.parser")
-            search_results = soup.find(attrs={'class': 'search-results organic'})
-            page_nav = soup.find(attrs={'class': 'pagination'})
+        response = get_page(url, header, proxy, proxies_list)
+        if response:
+            parser = html.fromstring(response.text)
+            parser.make_links_absolute(url)
+            search_results_xpath = "//div[@class='search-results organic']//div[@class='v-card']"
+            search_results = parser.xpath(search_results_xpath)
+            next_page = parser.xpath(".//a[@class='next ajax-page']/@href")
         else:
             search_results = None
 
         if search_results:
-            records = search_results.find_all(attrs={'class': 'info'})
-            answer_list += [contact_info(record) for record in records]
+            scraped_results += [parse_contact_info(result) for result in search_results]
         elif i == 1:
             print("No results found.")
             break
         else:
-            db.session.bulk_save_objects(answer_list)
+            db.session.bulk_save_objects(scraped_results)
             db.session.commit()
             print("Unable to find any more records. Either:\n"
                   "  1) there were genuinely no search results, or\n"
@@ -136,8 +159,8 @@ def run_scrape(search_term, search_location):
                   "If you believe there should have been more results, please rerun this State later.")
             break
 
-        if not page_nav.find(attrs={'class': 'next ajax-page'}):
-            db.session.bulk_save_objects(answer_list)
+        if not next_page:
+            db.session.bulk_save_objects(scraped_results)
             db.session.commit()
             break
 

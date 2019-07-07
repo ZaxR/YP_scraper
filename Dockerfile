@@ -7,8 +7,8 @@ ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONUNBUFFERED=1
 # set working directory
 WORKDIR /usr/src/app
 
-# Required for Gevent
-RUN apk add --no-cache python3 python3-dev gcc musl-dev zlib-dev libffi-dev openssl-dev ca-certificates
+# Required for Gevent and lxml
+RUN apk add --no-cache python3 python3-dev g++ gcc musl-dev zlib-dev libffi-dev libxslt-dev openssl-dev ca-certificates
 
 # add requirements
 COPY ./requirements.txt /usr/src/app/requirements.txt

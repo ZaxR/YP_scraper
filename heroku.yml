@@ -11,7 +11,7 @@ run:
   worker:
     image: web
     command: 
-      - celery -A app.celery worker --loglevel=info
+      - celery -A app.celery worker -O fair --loglevel=info
 
 # ${PORT} is the Heroku-specified port. Can't be manually set, so make sure to read it for Flask, too.
 
