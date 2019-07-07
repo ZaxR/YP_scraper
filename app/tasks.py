@@ -44,6 +44,8 @@ def long_task(self):
 
 @celery.task(bind=True)
 def long_task_test(self, recipient, search_terms, search_locations):
+    task_id = int(self.request.id.__str__())
+
     search_combos = sum([1
                          for term_list, loc_list in zip(search_terms, search_locations)
                          for term in term_list
@@ -58,12 +60,12 @@ def long_task_test(self, recipient, search_terms, search_locations):
                 db.session.add(models.SearchHistory(date.today(), term, loc, 'Anonymous'))
                 db.session.commit()
 
-                run_scrape(term, loc)
+                run_scrape(search_term=term, search_location=loc, task_id=task_id)
                 i += 1
                 self.update_state(state='PROGRESS',
                                   meta={'current': i, 'total': search_combos})
 
-    results = get_results()
+    results = get_results(task_id)
 
     fn_term = 'multi-term' if len(search_terms) > 1 else str(search_terms[0])
     fn_loc = 'multi-location' if len(search_locations) > 1 else str(search_locations[0])
