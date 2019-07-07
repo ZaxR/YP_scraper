@@ -1,4 +1,6 @@
 """Test."""
+import datetime
+import hashlib
 import re
 
 from flask import request, render_template, session, flash, redirect, \
@@ -28,6 +30,15 @@ def scrub_parameters(search_terms, search_locations):
     return search_terms, search_locations
 
 
+def generate_task_id(*args):
+    """Generates a hash of the current datetime and any args to be used as a task_id."""
+    current_dt = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+    to_hash = "".join([current_dt] + [str(arg) for arg in args])
+    task_id = int(hashlib.sha512(to_hash.encode('utf-8')).hexdigest(), 16) % 10**8
+
+    return task_id
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = ScrapeForm(request.form)
@@ -55,9 +66,11 @@ def index():
         kwargs = {"recipient": request.form.get("recipient"),
                   "search_terms": search_terms,
                   "search_locations": search_locations}
+        task_id = generate_task_id(search_terms, search_locations)
 
-        long_task_test.apply_async(kwargs=kwargs)
+        task = long_task_test.apply_async(kwargs=kwargs, task_id=task_id)
         flash('Starting scrape...')
+        # flash(f"To see scrape progress, visit https://yp-scraper.herokuapp.com/status/{task.id}")
 
     return render_template('index.html', form=form)
 
