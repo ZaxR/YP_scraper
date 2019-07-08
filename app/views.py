@@ -1,4 +1,6 @@
 """Test."""
+import datetime
+import hashlib
 import re
 
 from flask import request, render_template, session, flash, redirect, \
@@ -28,12 +30,21 @@ def scrub_parameters(search_terms, search_locations):
     return search_terms, search_locations
 
 
+def generate_task_id(*args):
+    """Generates a hash of the current datetime and any args to be used as a task_id."""
+    current_dt = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+    to_hash = "".join([current_dt] + [str(arg) for arg in args])
+    task_id = int(hashlib.sha512(to_hash.encode('utf-8')).hexdigest(), 16) % 10**8
+
+    return str(task_id)
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = ScrapeForm(request.form)
     if request.method == 'POST':  # form.validate_on_submit():
-        models.Records.__table__.drop(db.session.bind, checkfirst=True)
-        models.Records.__table__.create(db.session.bind, checkfirst=True)
+        # models.Records.__table__.drop(db.session.bind, checkfirst=True)
+        # models.Records.__table__.create(db.session.bind, checkfirst=True)
 
         # get raw input
         search_terms = request.form.getlist('search_terms')
@@ -52,37 +63,18 @@ def index():
                         return render_template('index.html', form=form)
 
         # long running stuff call goes here
+        task_id = generate_task_id(search_terms, search_locations)
         kwargs = {"recipient": request.form.get("recipient"),
                   "search_terms": search_terms,
                   "search_locations": search_locations}
 
-        long_task_test.apply_async(kwargs=kwargs)
+        task = long_task_test.apply_async(kwargs=kwargs, task_id=task_id)  # task_id must be a string
         flash('Starting scrape...')
+        # flash(f"To see scrape progress, visit https://yp-scraper.herokuapp.com/status/{task.id}")
+        # return redirect(url_for('index'))
+        # return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
 
     return render_template('index.html', form=form)
-
-
-# @app.route('/', methods=['GET', 'POST'])
-# def index():
-#     if request.method == 'GET':
-#         return render_template('index.html', email=session.get('email', ''))
-#     # email = request.form['email']
-#     # session['email'] = email
-
-#     # subject = "Hello From Flask"
-#     # msgd = {'to': request.form['email'], 'subject': subject}
-#     # # send the email
-#     if request.form['submit'] == "Start Long Calculation":
-#         #     # send right away
-#         #     send_async_email.delay(msgd)
-#         flash('Start long running task')
-#         # flash('Sending email to {0}'.format(email))
-#     # else:
-#     #     # send in one minute
-#     #     send_async_email.apply_async(args=[msgd], countdown=60)
-#     #     flash('An email will be sent to {0} in one minute'.format(email))
-
-#     return redirect(url_for('index'))
 
 
 # @app.route('/longtask', methods=['POST'])

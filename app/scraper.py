@@ -6,6 +6,7 @@ import time
 from io import StringIO, BytesIO
 
 import requests
+import usaddress
 from lxml import html
 
 from app import app, db, models
@@ -73,7 +74,7 @@ def get_page(url, proxy, header, proxies_list):
     return
 
 
-def parse_contact_info(result):
+def parse_contact_info(result, task_id):
     """Parse all the contact information from a result.
 
     Note:
@@ -85,37 +86,33 @@ def parse_contact_info(result):
         detail = result.xpath(detail_xpath)
         return detail[0].strip(" ") if detail != [] else ""  # Will be [] if the xpath is bad
 
-    business_name = ".//a[@class='business-name']//text()"
-    primary_phone = ".//*[@class='phones phone primary']//text()"
-    street_address = ".//*[@class='street-address']//text()"
-    locality = ".//*[@class='locality']//text()"
     # TODO: Fix that sometimes region is avail and not parsed, but zipcode fills in the region
-    region = ".//*[@class='adr']/span[3]//text()"
-    postal_code = ".//*[@class='adr']/span[4]//text()"
-    website = ".//*[@class='links']//a[contains(@class,'website')]/@href"
+    elements = {"business_name": ".//a[@class='business-name']//text()",
+                "primary_phone": ".//*[@class='phones phone primary']//text()",
+                "street_address": ".//*[@class='street-address']//text()",
+                "locality": ".//*[@class='locality']//text()",
+                "region": ".//*[@class='adr']/span[3]//text()",
+                "postal_code": ".//*[@class='adr']/span[4]//text()",
+                "website": ".//*[@class='links']//a[contains(@class,'website')]/@href"}
 
-    # TODO: Use k:v pairs to prevent record ordering issues
-    elements = [business_name, primary_phone, street_address, locality, region, postal_code, website]
-
-    contact_details = [contact_detail(detail_xpath) for detail_xpath in elements]
+    contact_details = {detail: contact_detail(detail_xpath) for detail, detail_xpath in elements.items()}
 
     # Remove trailing ",\xa0" after city name when only city is in locality
-    # Unconfirmed if this can happen when region and postal code fields are blank
-    contact_details[3] = contact_details[3].split(",")[0]
+    if contact_details["locality"].endswith((",", ",\xa0")):
+        contact_details["locality"] = contact_details["locality"].split(",")[0]
+    elif not contact_details["region"] and not contact_details["postal_code"]:
+        # TODO: Train own model to replace the default https://github.com/datamade/usaddress/tree/master/training
+        tag_mapping = {'PlaceName': "locality", 'StateName': "region", 'ZipCode': "postal_code"}
+        new_adr_info = usaddress.tag(contact_details["locality"], tag_mapping=tag_mapping)[0]
+        for k in new_adr_info:
+            if k in contact_details:
+                contact_details.update({k: new_adr_info[k]})
 
-    # If we can't get region and postal_code, that info might be in locality
-    if not contact_details[4] and not contact_details[5]:
-        try:
-            contact_details[3], contact_details[4], contact_details[5] = [
-                i.rstrip(",") for i in contact_details[3].rsplit(" ", 2)]
-        except ValueError:
-            pass
-
-    return models.Records(*contact_details)
+    return models.Records(**{"task_id": task_id}, **contact_details)
 
 
 # Main program
-def run_scrape(search_term, search_location):
+def run_scrape(search_term, search_location, task_id=None):
     # locate user agents and proxies files
     resource_path = os.path.join(app.root_path, 'static')
 
@@ -145,7 +142,7 @@ def run_scrape(search_term, search_location):
             search_results = None
 
         if search_results:
-            scraped_results += [parse_contact_info(result) for result in search_results]
+            scraped_results += [parse_contact_info(result, task_id) for result in search_results]
         elif i == 1:
             print("No results found.")
             break
@@ -165,16 +162,26 @@ def run_scrape(search_term, search_location):
             break
 
 
-def get_results():
-    query_all = [[getattr(curr, column.name)
-                  for column in models.Records.__mapper__.columns]
-                 for curr in models.Records.query.all()]
-    if query_all:
+def get_results(task_id):
+    # query_all = [[getattr(obj, column.name)
+    #               for column in models.Records.__mapper__.columns]
+    #              for obj in models.Records.query.filter_by(task_id=task_id).all()]
+
+    # columns = models.Records.__table__.columns.keys()
+
+    # TODO enforce relationship between select statement and the writerow for the header
+    query = f"""
+    SELECT business_name, primary_phone, street_address, locality, region, postal_code, website
+    FROM Records
+    WHERE task_id = {task_id}
+    """
+    task_results = [r for r in db.engine.execute(query)]
+
+    if task_results:
         # csv.write requires StringIO
         file_like = StringIO()
-        csv.writer(file_like).writerow(["Id", "Name", "Phone Number",
-                                        "Address", "City", "State", "Zip Code", "Website"])
-        csv.writer(file_like).writerows(query_all)
+        csv.writer(file_like).writerow(["Name", "Phone Number", "Address", "City", "State", "Zip Code", "Website"])
+        csv.writer(file_like).writerows(task_results)
 
         # send_file requires BytesIO()
         output_csv = BytesIO()

@@ -5,22 +5,14 @@ from app import db
 class Records(db.Model):
     __tablename__ = "records"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(30), index=True, unique=False)
-    phone = db.Column(db.String(17), index=True, unique=False)
-    address = db.Column(db.String(30), index=True, unique=False)
-    city = db.Column(db.String(30), index=True, unique=False)
-    state = db.Column(db.String(2), index=True, unique=False)
-    zip_code = db.Column(db.Integer, index=True, unique=False)
+    task_id = db.Column(db.Integer, index=True, unique=False)
+    business_name = db.Column(db.String(30), index=True, unique=False)
+    primary_phone = db.Column(db.String(17), index=True, unique=False)
+    street_address = db.Column(db.String(30), index=True, unique=False)
+    locality = db.Column(db.String(30), index=True, unique=False)
+    region = db.Column(db.String(2), index=True, unique=False)
+    postal_code = db.Column(db.Integer, index=True, unique=False)
     website = db.Column(db.String(), index=True, unique=False)
-
-    def __init__(self, name, phone, address, city, state, zip_code, website):
-        self.name = name
-        self.phone = phone
-        self.address = address
-        self.city = city
-        self.state = state
-        self.zip_code = zip_code
-        self.website = website
 
 
 class SearchHistory(db.Model):
