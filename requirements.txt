@@ -1,7 +1,7 @@
 celery
 Flask
 Flask-Bootstrap
-# Flask-Login  -or-  Flask-User
+Flask-Login
 Flask-Mail
 Flask-Migrate
 flask-paginate

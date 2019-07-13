@@ -1,6 +1,7 @@
 import os
 
 # Secret key used for csrf and password hashing
+# TODO: Upgrade this key to a secure random key?
 SECRET_KEY = os.urandom(24)
 
 WTF_CSRF_ENABLED = False
