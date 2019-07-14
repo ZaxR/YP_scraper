@@ -16,7 +16,18 @@ services:
     env_file:
       - .env
     depends_on:
+      - db
       - redis
+    networks:
+      - dockernet
+
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    restart: always
+    env_file:
+      - .env
     networks:
       - dockernet
 
@@ -35,7 +46,9 @@ services:
       - dockernet
 
   redis:
-    image: redis
+    image: redis:alpine
+    ports:
+      - "6379:6379"
     networks:
       - dockernet
 

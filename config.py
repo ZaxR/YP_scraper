@@ -7,10 +7,16 @@ SECRET_KEY = os.urandom(24)
 WTF_CSRF_ENABLED = False
 
 # Database configuration
-basedir = os.path.abspath(os.path.dirname(__file__))
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
-SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
-SQLALCHEMY_TRACK_MODIFICATIONS = True
+SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+if not SQLALCHEMY_DATABASE_URI:
+    POSTGRES_USER = os.environ.get('POSTGRES_USER')
+    POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
+    POSTGRES_URL = os.environ.get('POSTGRES_URL')
+    POSTGRES_PORT = os.environ.get('POSTGRES_PORT')
+    POSTGRES_DB = os.environ.get('POSTGRES_DB')
+    SQLALCHEMY_DATABASE_URI = f"postgres+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_URL}:{POSTGRES_PORT}/{POSTGRES_DB}"
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Flask-Mail configuration
 MAIL_SERVER = 'smtp.gmail.com'

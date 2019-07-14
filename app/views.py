@@ -39,6 +39,7 @@ def index():
                       "recipient_emails": recipient_emails}
 
             # Celery task
+            print(f"index route user id: {current_user.get_id()}")
             task_id = generate_task_id(search_term, search_location)
             task = long_task_test.apply_async(kwargs=kwargs, task_id=task_id)  # task_id must be a string
             flash('Starting scrape...', category='success')

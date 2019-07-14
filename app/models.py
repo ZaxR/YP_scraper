@@ -25,11 +25,11 @@ class SearchHistory(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     term = db.Column(db.String(17), index=True, unique=False)
     location = db.Column(db.String(30), index=True, unique=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('yp_user.id'))
 
 
 class User(UserMixin, db.Model):
-    __tablename__ = "user"
+    __tablename__ = "yp_user"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column('username', db.String(50), unique=True, index=True)
     password_hash = db.Column('password', db.String(128))
@@ -58,4 +58,5 @@ class User(UserMixin, db.Model):
 
 @login.user_loader
 def load_user(id):
+    print(User.query.all())
     return User.query.get(int(id))
