@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, FieldList, PasswordField, StringField, SubmitField
-from wtforms.validators import Email, EqualTo, InputRequired, Optional, ValidationError
+from wtforms import BooleanField, PasswordField, StringField, SubmitField
+from wtforms.validators import Email, EqualTo, InputRequired, Length, ValidationError
 
 from app.models import User
 
@@ -30,8 +30,9 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 
-# Implemented manual validation instead, until validation for FieldList solution is found
 class ScrapeForm(FlaskForm):
-    search_terms = FieldList(StringField('Term: ', [Optional(strip_whitespace=True)]), min_entries=1, max_entries=10)
-    search_locations = FieldList(StringField('Location: ', [InputRequired(
-        message='Please enter a search location.')]), min_entries=1, max_entries=10)
+    search_term = StringField('Term: ', validators=[InputRequired(message='Please enter a search term.'),
+                                                    Length(min=2, message='Terms must be at least two characters.')])
+    search_location = StringField('Location: ',
+                                  validators=[InputRequired(message='Please enter a search location.'),
+                                              Length(min=2, message='Locations must be at least two characters.')])

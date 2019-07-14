@@ -1,34 +1,14 @@
 """Test."""
 import datetime
 import hashlib
-import re
 
-from flask import request, render_template, session, flash, redirect, url_for, jsonify
+from flask import request, render_template, flash, redirect, url_for
 from flask_login import current_user, login_user, logout_user
 from werkzeug.urls import url_parse
 
 from app import app, db, models
 from app.forms import LoginForm, RegistrationForm, ScrapeForm
-from app.tasks import long_task, long_task_test, send_async_email
-
-
-def scrub_parameters(search_terms, search_locations):
-    for c, term_group in enumerate(search_terms):
-        search_terms[c] = list(set([i.strip() for i in re.split('[;]+', re.sub('[^a-zA-Z0-9; ]', '', term_group))]))
-
-    for c, loc_group in enumerate(search_locations):
-        search_locations[c] = list(set([i.strip() for i in re.split('[;]+', re.sub('[^a-zA-Z0-9;, ]', '', loc_group))]))
-
-    for c, loc_list in enumerate(search_locations):
-        for c2, loc in enumerate(loc_list):
-            if loc == 'ALL':
-                search_locations[c] = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI',
-                                       'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI',
-                                       'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC',
-                                       'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT',
-                                       'VT', 'VA', 'WA', 'WV', 'WI', 'WY']
-
-    return search_terms, search_locations
+from app.tasks import long_task_test
 
 
 def generate_task_id(*args):
@@ -43,33 +23,21 @@ def generate_task_id(*args):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = ScrapeForm(request.form)
-    if request.method == 'POST':  # form.validate_on_submit():
+    if form.validate_on_submit():
         if not current_user.is_authenticated:
             flash('Please log in to finish submitting your request.', category='warning')
             return redirect(url_for('login', next=request.url))
 
         # get raw input
-        search_terms = request.form.getlist('search_terms')
-        search_locations = request.form.getlist('search_locations')
-
-        # takes semicolon-separated terms and semicolon-separated locations
-        search_terms, search_locations = scrub_parameters(search_terms, search_locations)
-
-        # Custom validation until wtforms with FieldList solution found
-        # todo give more specific flash output. Auto-delete blank rows?
-        for g in [search_terms, search_locations]:
-            for s in g:
-                for i in s:
-                    if i == '':
-                        flash('All fields for created rows are required. Please delete any blank rows and try again.', category='danger')
-                        return render_template('index.html', form=form)
+        search_terms = request.form.get('search_term')
+        search_locations = request.form.get('search_location')
 
         # long running stuff call goes here
         task_id = generate_task_id(search_terms, search_locations)
         kwargs = {"user": current_user.get_id(),
                   "recipient": request.form.get("recipient"),
-                  "search_terms": search_terms,
-                  "search_locations": search_locations}
+                  "search_term": search_term,
+                  "search_location": search_location}
 
         task = long_task_test.apply_async(kwargs=kwargs, task_id=task_id)  # task_id must be a string
         flash('Starting scrape...', category='success')
@@ -77,7 +45,13 @@ def index():
         # return redirect(url_for('index'))
         # return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
 
-    return render_template('index.html', form=form)
+    # Collect user's search history, if logged in
+    search_history = []
+    if current_user.is_authenticated:
+        user_id = current_user.get_id()
+        search_history = models.User.query.get(int(user_id)).history
+
+    return render_template('index.html', form=form, search_history=search_history)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -111,6 +85,7 @@ def login():
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('index')
+        flash(f'Welcome, {user}!', category='success')
         return redirect(next_page)
 
     return render_template('login.html', title='Sign In', form=form)

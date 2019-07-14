@@ -1,6 +1,4 @@
 """Test."""
-import random
-import time
 from datetime import datetime
 
 from flask_mail import Attachment, Message
@@ -22,57 +20,25 @@ def send_async_email(msgd):
 
 
 @celery.task(bind=True)
-def long_task(self):
-    """Background task that runs a long function with progress reports."""
-    verb = ['Starting up', 'Booting', 'Repairing', 'Loading', 'Checking']
-    adjective = ['master', 'radiant', 'silent', 'harmonic', 'fast']
-    noun = ['solar array', 'particle reshaper', 'cosmic ray', 'orbiter', 'bit']
-    message = ''
-    total = random.randint(10, 50)
-    for i in range(total):
-        if not message or random.random() < 0.25:
-            message = '{0} {1} {2}...'.format(random.choice(verb),
-                                              random.choice(adjective),
-                                              random.choice(noun))
-        self.update_state(state='PROGRESS',
-                          meta={'current': i, 'total': total,
-                                'status': message})
-        time.sleep(1)
-    return {'current': 100, 'total': 100, 'status': 'Task completed!',
-            'result': 42}
-
-
-@celery.task(bind=True)
-def long_task_test(self, user, recipient, search_terms, search_locations):
+def long_task_test(self, user, recipient, search_term, search_location):
     task_id = int(self.request.id.__str__())
 
-    search_combos = sum([1
-                         for term_list, loc_list in zip(search_terms, search_locations)
-                         for term in term_list
-                         for loc in loc_list])
+    # add search to search history
+    search_history = models.SearchHistory(timestamp=datetime.now(),
+                                          term=search_term,
+                                          location=search_location,
+                                          user_id=user)
+    db.session.add(search_history)
+    db.session.commit()
 
-    for term_list, loc_list in zip(search_terms, search_locations):
-        i = 0
-        for term in term_list:
-            for loc in loc_list:
-                # add search to search history
-                search_history = models.SearchHistory(timestamp=datetime.now(),
-                                                      term=term,
-                                                      location=loc,
-                                                      user_id=user)
-                db.session.add(search_history)
-                db.session.commit()
-
-                run_scrape(search_term=term, search_location=loc, task_id=task_id)
-                i += 1
-                self.update_state(state='PROGRESS',
-                                  meta={'current': i, 'total': search_combos})
+    # TODO: Update current/total with page of search results
+    self.update_state(state='PROGRESS', meta={'current': 0, 'total': 1})
+    run_scrape(search_term=search_term, search_location=search_location, task_id=task_id)
+    self.update_state(state='PROGRESS', meta={'current': 1, 'total': 1})
 
     results = get_results(task_id)
 
-    fn_term = 'multi-term' if len(search_terms) > 1 else str(search_terms[0])
-    fn_loc = 'multi-location' if len(search_locations) > 1 else str(search_locations[0])
-    attachment_filename = "YP_" + fn_term + "_" + fn_loc + ".csv"
+    attachment_filename = "YP_" + search_term + "_" + search_location + ".csv"
 
     content_type = 'text/csv'
     attachments = [Attachment(filename=attachment_filename, content_type=content_type, data=results.read())]
@@ -85,3 +51,6 @@ def long_task_test(self, user, recipient, search_terms, search_locations):
             "body": body, "attachments": attachments}
 
     send_async_email(msgd)
+
+    # return {'current': 100, 'total': 100, 'status': 'Task completed!',
+    #         'result': 42}

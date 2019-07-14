@@ -53,7 +53,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return '<User: {}>'.format(self.username)
+        return self.username
 
 
 @login.user_loader
