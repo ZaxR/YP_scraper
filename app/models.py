@@ -10,12 +10,12 @@ class Records(db.Model):
     __tablename__ = "records"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     task_id = db.Column(db.Integer, index=True, unique=False)
-    business_name = db.Column(db.String(30), index=True, unique=False)
+    business_name = db.Column(db.String(), index=True, unique=False)
     primary_phone = db.Column(db.String(17), index=True, unique=False)
-    street_address = db.Column(db.String(30), index=True, unique=False)
-    locality = db.Column(db.String(30), index=True, unique=False)
-    region = db.Column(db.String(2), index=True, unique=False)
-    postal_code = db.Column(db.Integer, index=True, unique=False)
+    street_address = db.Column(db.String(), index=True, unique=False)
+    locality = db.Column(db.String(), index=True, unique=False)
+    region = db.Column(db.String(), index=True, unique=False)
+    postal_code = db.Column(db.String(), index=True, unique=False)  # str instead of int incase of bad scrape
     website = db.Column(db.String(), index=True, unique=False)
 
 
@@ -23,17 +23,17 @@ class SearchHistory(db.Model):
     __tablename__ = "search_history"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    term = db.Column(db.String(17), index=True, unique=False)
-    location = db.Column(db.String(30), index=True, unique=False)
+    term = db.Column(db.String(), index=True, unique=False)
+    location = db.Column(db.String(), index=True, unique=False)
     user_id = db.Column(db.Integer, db.ForeignKey('yp_user.id'))
 
 
 class User(UserMixin, db.Model):
     __tablename__ = "yp_user"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column('username', db.String(50), unique=True, index=True)
+    username = db.Column('username', db.String(), unique=True, index=True)
     password_hash = db.Column('password', db.String(128))
-    email = db.Column('email', db.String(50), unique=True, index=True)
+    email = db.Column('email', db.String(), unique=True, index=True)
     history = db.relationship('SearchHistory', backref='searcher', lazy='dynamic')
     # registered_on = db.Column('registered_on', db.DateTime)
     # is_admin = db.Column(db.Boolean, default=False)
