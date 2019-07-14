@@ -40,59 +40,82 @@
         </div>
 
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <div class="notice-board">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             Search Parameters
                         </div>
-
                         <div class="panel-body">
                             <form class="form-horizontal" action="" method="POST">
-                                <div class="panel-footer">
-                                    <input type="submit" name="submit" class="form-control" value="Scrape & Download">
-                                </div>
                                 <div class="form-group row">
-                                    <label for="recipient" class="col-sm-2 col-form-label">Email</label>
-                                    <div class="col-sm-10">
+                                    <label for="recipient" class="col-sm-3 control-label">Email</label>
+                                    <div class="col-sm-9">
                                         <input type="text" class="form-control" name="recipient" placeholder="email@domain.com">
                                     </div>
 <!--                                 <div class="panel-footer">
                                     <input type="text" name="recipient" class="form-control"> -->
                                 </div>
-                                <table class="table table-bordered table-hover" id="tableAddRow">
-                                    <thead>
-                                        <tr>
-                                            <th>Term</th>
-                                            <th>Locations</th>
-                                            <th style="width:10px"><span class="glyphicon glyphicon-plus addBtn"></span></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                          <td><input type="text" name="search_terms" class="form-control"/></td>
-                                          <td><input type="text" name="search_locations" class="form-control" /></td>
-                                          <td></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="form-group row">
+                                    <label for="search_term" class="col-sm-2 col-form-label">Search Term</label>
+                                    <div class="col-md-4">
+                                        <input type="text" name="search_term" class="form-control"/>
+                                    </div>
+                                    <label for="search_location" class="col-sm-2 col-form-label">Location</label>
+                                    <div class="col-md-4">
+                                        <input type="text" name="search_location" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="panel-footer">
+                                    <input type="submit" name="submit" class="form-control" value="Scrape & E-mail">
+                                </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="alert alert-warning">
                     <b>Notes:</b>
                     <ul>
-                        <li>You can type 'ALL' in locations to search a term for every State.</li>
-                        <li>Use semicolons to separate multiple terms and/or locations (e.g. 'Pharmacy; Gift Store' -or- 'CA; IL').</li>
-                        <li>Use commas for City, State pairs (e.g. 'Chicago, IL; New York City, NY').</li>
-                        <li>Click the '+' to add new searches.</li>
-                        <li><b>Keep this window open in the background to ensure your results file downloads.</b></li>
+                        <li>The search term can be anything you want to search Yellow Pages for.</li>
+                        <li>The location can take the form of a City, State (e.g. 'Chicago, IL) or just a State name (e.g. 'IL' or 'Illinois').</li>
+                        <li>Enter a comma-separated list of e-mails to receive the scrape results as a CSV.</li>
                 </div>
                 <hr />
+            </div>
+
+            <div>
+                <div class="col-md-12">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Run Time</th>
+                                <th scope="col">Search Term</th>
+                                <th scope="col">Location</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in search_history %}
+                                <tr>
+                                    <th scope="row">{{ item.id }}</th>
+                                    <td> {{ item.timestamp }} </td>
+                                    <td> {{ item.term }} </td>
+                                    <td> {{ item.location }} </td>
+                                    <td> Complete </td>
+                                    <td> None Avail. </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if not search_history %}
+                        Log in to see your search history.
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
