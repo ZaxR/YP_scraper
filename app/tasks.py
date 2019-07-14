@@ -20,7 +20,7 @@ def send_async_email(msgd):
 
 
 @celery.task(bind=True)
-def long_task_test(self, user, recipient, search_term, search_location):
+def long_task_test(self, user, recipient_emails, search_term, search_location):
     task_id = int(self.request.id.__str__())
 
     # add search to search history
@@ -42,12 +42,9 @@ def long_task_test(self, user, recipient, search_term, search_location):
 
     content_type = 'text/csv'
     attachments = [Attachment(filename=attachment_filename, content_type=content_type, data=results.read())]
-    recipients = [recipient]
-    body = "tada"
-    # body = (f"Attached are your results for the following search term/location combos: "
-    #         f"{dict(zip(search_terms, search_locations))}")
+    body = f"Attached are your scraped results for the term '{search_term}' for the location '{search_location}'."
 
-    msgd = {"recipients": recipients, "subject": "Yellow Pages Scrape Results",
+    msgd = {"recipients": recipient_emails, "subject": "Yellow Pages Scrape Results",
             "body": body, "attachments": attachments}
 
     send_async_email(msgd)
