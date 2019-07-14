@@ -29,11 +29,11 @@ def index():
             return redirect(url_for('login', next=request.url))
 
         # get raw input
-        search_terms = request.form.get('search_term')
-        search_locations = request.form.get('search_location')
+        search_term = request.form.get('search_term')
+        search_location = request.form.get('search_location')
 
         # long running stuff call goes here
-        task_id = generate_task_id(search_terms, search_locations)
+        task_id = generate_task_id(search_term, search_location)
         kwargs = {"user": current_user.get_id(),
                   "recipient": request.form.get("recipient"),
                   "search_term": search_term,
