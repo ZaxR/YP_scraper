@@ -17,7 +17,7 @@
 
         <div class="row">
             <div class="col-md-12">
-                <h4 class="page-head-line">YP Scraper</h4>
+                <h2 class="page-head-line">YP Scraper</h2>
             </div>
         </div>
 
@@ -42,20 +42,10 @@
         <div class="row">
             <div class="col-md-8">
                 <div class="notice-board">
+                    <h3>Search Parameters</h3>
                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                            Search Parameters
-                        </div>
                         <div class="panel-body">
                             <form class="form-horizontal" action="" method="POST">
-                                <div class="form-group row">
-                                    <label for="recipient" class="col-sm-3 control-label">Email</label>
-                                    <div class="col-sm-9">
-                                        <input type="text" class="form-control" name="recipient" placeholder="email@domain.com">
-                                    </div>
-<!--                                 <div class="panel-footer">
-                                    <input type="text" name="recipient" class="form-control"> -->
-                                </div>
                                 <div class="form-group row">
                                     <label for="search_term" class="col-sm-2 col-form-label">Search Term</label>
                                     <div class="col-md-4">
@@ -66,9 +56,13 @@
                                         <input type="text" name="search_location" class="form-control"/>
                                     </div>
                                 </div>
-                                <div class="panel-footer">
-                                    <input type="submit" name="submit" class="form-control" value="Scrape & E-mail">
+                                <div class="form-group row">
+                                    <label for="recipient" class="col-sm-2 control-label">Email</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" name="recipient" placeholder="email@domain.com">
+                                    </div>
                                 </div>
+                                <button type="submit" class="btn btn-warning btn-lg btn-block">Scrape & E-mail</button>
                             </form>
                         </div>
                     </div>
@@ -76,8 +70,8 @@
             </div>
 
             <div class="col-md-4">
+                <h3>Instructions</h3>
                 <div class="alert alert-warning">
-                    <b>Notes:</b>
                     <ul>
                         <li>The search term can be anything you want to search Yellow Pages for.</li>
                         <li>The location can take the form of a City, State (e.g. 'Chicago, IL) or just a State name (e.g. 'IL' or 'Illinois').</li>
@@ -88,6 +82,7 @@
 
             <div>
                 <div class="col-md-12">
+                    <h3>Search History</h3>
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>

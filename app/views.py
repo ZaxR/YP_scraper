@@ -45,11 +45,11 @@ def index():
         # return redirect(url_for('index'))
         # return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
 
+    # Collect user's search history, if logged in
+    search_history = []
     if current_user.is_authenticated:
         user_id = current_user.get_id()
         search_history = models.User.query.get(int(user_id)).history
-    else:
-        search_history = []
 
     return render_template('index.html', form=form, search_history=search_history)
 
