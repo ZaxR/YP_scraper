@@ -11,6 +11,7 @@ flower
 gevent
 gunicorn
 lxml
+psycopg2
 redis
 requests
 SQLAlchemy

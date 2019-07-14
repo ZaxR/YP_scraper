@@ -24,10 +24,13 @@ def long_task_test(self, user, recipient_emails, search_term, search_location):
     task_id = int(self.request.id.__str__())
 
     # add search to search history
+    print(f"long_task_test task user: {user}")
     search_history = models.SearchHistory(timestamp=datetime.now(),
                                           term=search_term,
                                           location=search_location,
                                           user_id=user)
+    print(search_history)
+    print(type(search_history))
     db.session.add(search_history)
     db.session.commit()
 

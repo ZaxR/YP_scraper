@@ -38,6 +38,8 @@ celery = make_celery(app)
 
 from app import views, models
 
-# Start fresh records table and create all missing tables
+# Save these comments incase of a one-off need to drop
 # models.Records.__table__.drop(db.session.bind, checkfirst=True)
+# db.drop_all()
+
 db.create_all()  # https://docs.sqlalchemy.org/en/13/core/metadata.html#sqlalchemy.schema.MetaData.create_all
