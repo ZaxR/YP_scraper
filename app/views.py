@@ -45,8 +45,6 @@ def index():
             # flash(f"To see scrape progress, visit https://yp-scraper.herokuapp.com/status/{task.id}")
             # return redirect(url_for('index'))
             # return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
-        else:
-            flash("Bad validation")
 
     # Collect user's search history, if logged in
     search_history = []

@@ -42,7 +42,7 @@ def long_task_test(self, user, recipient_emails, search_term, search_location):
 
     content_type = 'text/csv'
     attachments = [Attachment(filename=attachment_filename, content_type=content_type, data=results.read())]
-    body = f"Attached are your scraped results for the term {search_term} for the location {search_location}"
+    body = f"Attached are your scraped results for the term '{search_term}' for the location '{search_location}'."
 
     msgd = {"recipients": recipient_emails, "subject": "Yellow Pages Scrape Results",
             "body": body, "attachments": attachments}
