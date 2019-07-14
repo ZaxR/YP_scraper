@@ -23,27 +23,30 @@ def generate_task_id(*args):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = ScrapeForm(request.form)
-    if form.validate_on_submit():
+    if request.method == 'POST':
         if not current_user.is_authenticated:
             flash('Please log in to finish submitting your request.', category='warning')
             return redirect(url_for('login', next=request.url))
 
-        # get raw input
-        search_term = request.form.get('search_term')
-        search_location = request.form.get('search_location')
+        if form.validate():
+            search_term = request.form.get('search_term')
+            search_location = request.form.get('search_location')
+            recipient_emails = request.form.get("recipient_emails").strip().split(",")
 
-        # long running stuff call goes here
-        task_id = generate_task_id(search_term, search_location)
-        kwargs = {"user": current_user.get_id(),
-                  "recipient": request.form.get("recipient"),
-                  "search_term": search_term,
-                  "search_location": search_location}
+            kwargs = {"user": current_user.get_id(),
+                      "search_term": search_term,
+                      "search_location": search_location,
+                      "recipient_emails": recipient_emails}
 
-        task = long_task_test.apply_async(kwargs=kwargs, task_id=task_id)  # task_id must be a string
-        flash('Starting scrape...', category='success')
-        # flash(f"To see scrape progress, visit https://yp-scraper.herokuapp.com/status/{task.id}")
-        # return redirect(url_for('index'))
-        # return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
+            # Celery task
+            task_id = generate_task_id(search_term, search_location)
+            task = long_task_test.apply_async(kwargs=kwargs, task_id=task_id)  # task_id must be a string
+            flash('Starting scrape...', category='success')
+            # flash(f"To see scrape progress, visit https://yp-scraper.herokuapp.com/status/{task.id}")
+            # return redirect(url_for('index'))
+            # return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
+        else:
+            flash("Bad validation")
 
     # Collect user's search history, if logged in
     search_history = []
@@ -93,8 +96,11 @@ def login():
 
 @app.route('/logout')
 def logout():
-    logout_user()
-    flash("We'll miss you. The Yellow Pages won't.", category='info')
+    if not current_user.is_authenticated:
+        flash("You weren't even logged in, silly.", category='info')
+    else:
+        logout_user()
+        flash("We'll miss you. The Yellow Pages won't.", category='info')
     return redirect(url_for('index'))
 
 

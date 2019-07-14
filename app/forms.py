@@ -5,6 +5,21 @@ from wtforms.validators import Email, EqualTo, InputRequired, Length, Validation
 from app.models import User
 
 
+class CommaSeparatedEmails(Email):
+    # TODO clean this class up
+    def __call__(self, form, field):
+        emails = [e.strip() for e in field.data.strip().split(",")]
+        bad_email_msgs = []
+        for email in emails:
+            field.data = email
+            try:
+                Email.__call__(self, form, field)
+            except ValidationError as e:
+                bad_email_msgs.append(" ".join(e.args) + ": " + email)
+        if bad_email_msgs:
+            raise ValidationError("\n".join(bad_email_msgs))
+
+
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired()])
     email = StringField('Email', validators=[InputRequired(), Email()])
@@ -36,3 +51,5 @@ class ScrapeForm(FlaskForm):
     search_location = StringField('Location: ',
                                   validators=[InputRequired(message='Please enter a search location.'),
                                               Length(min=2, message='Locations must be at least two characters.')])
+    recipient_emails = StringField('Recipient Emails: ', validators=[InputRequired(), CommaSeparatedEmails()])
+    submit = SubmitField('Scrape & E-mail')

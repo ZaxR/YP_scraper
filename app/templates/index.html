@@ -47,22 +47,31 @@
                         <div class="panel-body">
                             <form class="form-horizontal" action="" method="POST">
                                 <div class="form-group row">
-                                    <label for="search_term" class="col-sm-2 col-form-label">Search Term</label>
+                                    <label for="search_term" class="col-sm-2 col-form-label">{{ form.search_term.label }}</label>
                                     <div class="col-md-4">
-                                        <input type="text" name="search_term" class="form-control"/>
+                                        {{ form.search_term(class_="form-control") }}
+                                        {% for error in form.search_term.errors %}
+                                            <span>[{{ error }}]</span>
+                                        {% endfor %}
                                     </div>
-                                    <label for="search_location" class="col-sm-2 col-form-label">Location</label>
+                                    <label for="search_location" class="col-sm-2 col-form-label">{{ form.search_location.label }}</label>
                                     <div class="col-md-4">
-                                        <input type="text" name="search_location" class="form-control"/>
+                                        {{ form.search_location(class_="form-control") }}
+                                        {% for error in form.search_location.errors %}
+                                            <span>[{{ error }}]</span>
+                                        {% endfor %}
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label for="recipient" class="col-sm-2 control-label">Email</label>
+                                    <label for="recipient_emails" class="col-sm-2 col-form-label">{{ form.recipient_emails.label }}</label>
                                     <div class="col-sm-10">
-                                        <input type="text" class="form-control" name="recipient" placeholder="email@domain.com">
+                                        {{ form.recipient_emails(class_="form-control", placeholder="email@domain.com") }}
+                                        {% for error in form.recipient_emails.errors %}
+                                            <span>[{{ error }}]</span>
+                                        {% endfor %}
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-warning btn-lg btn-block">Scrape & E-mail</button>
+                                {{ form.submit(class="btn btn-warning btn-lg btn-block") }}
                             </form>
                         </div>
                     </div>
