@@ -1,7 +1,7 @@
 """Test."""
 import random
 import time
-from datetime import date
+from datetime import datetime
 
 from flask_mail import Attachment, Message
 
@@ -43,7 +43,7 @@ def long_task(self):
 
 
 @celery.task(bind=True)
-def long_task_test(self, recipient, search_terms, search_locations):
+def long_task_test(self, user, recipient, search_terms, search_locations):
     task_id = int(self.request.id.__str__())
 
     search_combos = sum([1
@@ -56,8 +56,11 @@ def long_task_test(self, recipient, search_terms, search_locations):
         for term in term_list:
             for loc in loc_list:
                 # add search to search history
-                # todo update 'Anonymous to username if logged it
-                db.session.add(models.SearchHistory(date.today(), term, loc, 'Anonymous'))
+                search_history = models.SearchHistory(timestamp=datetime.now(),
+                                                      term=term,
+                                                      location=loc,
+                                                      user_id=user)
+                db.session.add(search_history)
                 db.session.commit()
 
                 run_scrape(search_term=term, search_location=loc, task_id=task_id)

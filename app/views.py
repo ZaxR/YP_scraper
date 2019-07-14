@@ -3,11 +3,12 @@ import datetime
 import hashlib
 import re
 
-from flask import request, render_template, session, flash, redirect, \
-    url_for, jsonify
+from flask import request, render_template, session, flash, redirect, url_for, jsonify
+from flask_login import current_user, login_user, logout_user
+from werkzeug.urls import url_parse
 
 from app import app, db, models
-from app.forms import ScrapeForm
+from app.forms import LoginForm, RegistrationForm, ScrapeForm
 from app.tasks import long_task, long_task_test, send_async_email
 
 
@@ -43,8 +44,9 @@ def generate_task_id(*args):
 def index():
     form = ScrapeForm(request.form)
     if request.method == 'POST':  # form.validate_on_submit():
-        # models.Records.__table__.drop(db.session.bind, checkfirst=True)
-        # models.Records.__table__.create(db.session.bind, checkfirst=True)
+        if not current_user.is_authenticated:
+            flash('Please log in to finish submitting your request.', category='warning')
+            return redirect(url_for('login', next=request.url))
 
         # get raw input
         search_terms = request.form.getlist('search_terms')
@@ -64,17 +66,61 @@ def index():
 
         # long running stuff call goes here
         task_id = generate_task_id(search_terms, search_locations)
-        kwargs = {"recipient": request.form.get("recipient"),
+        kwargs = {"user": current_user.get_id(),
+                  "recipient": request.form.get("recipient"),
                   "search_terms": search_terms,
                   "search_locations": search_locations}
 
         task = long_task_test.apply_async(kwargs=kwargs, task_id=task_id)  # task_id must be a string
-        flash('Starting scrape...')
+        flash('Starting scrape...', category='success')
         # flash(f"To see scrape progress, visit https://yp-scraper.herokuapp.com/status/{task.id}")
         # return redirect(url_for('index'))
         # return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
 
     return render_template('index.html', form=form)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        flash("You're already a logged in user - you don't need to register, silly.", category='info')
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = models.User(username=form.username.data, email=form.email.data)
+        user.password = form.password.data
+        db.session.add(user)
+        db.session.commit()
+        flash('Congratulations, you are now a registered user!', category='success')
+        return redirect(url_for('login'))
+    return render_template('register.html', title='Register', form=form)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        flash("You're already logged in, silly.", category='info')
+        return redirect(url_for('index'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = models.User.query.filter_by(username=form.username.data).first()
+        if user is None or not user.verify_password(form.password.data):
+            flash('Invalid username or password', category='danger')
+            return redirect(url_for('login', next=request.args.get('next')))
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('index')
+        return redirect(next_page)
+
+    return render_template('login.html', title='Sign In', form=form)
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash("We'll miss you. The Yellow Pages won't.", category='info')
+    return redirect(url_for('index'))
 
 
 # @app.route('/longtask', methods=['POST'])

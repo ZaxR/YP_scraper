@@ -1,5 +1,9 @@
+from datetime import datetime
+
+from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db
+
+from app import db, login
 
 
 class Records(db.Model):
@@ -18,32 +22,21 @@ class Records(db.Model):
 class SearchHistory(db.Model):
     __tablename__ = "search_history"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    date = db.Column(db.String(30), index=True, unique=False)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     term = db.Column(db.String(17), index=True, unique=False)
     location = db.Column(db.String(30), index=True, unique=False)
-    username = db.Column(db.String(30), index=True, unique=False)
-
-    def __init__(self, date, term, location, username):
-        self.date = date
-        self.term = term
-        self.location = location
-        self.username = username
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
-class Users(db.Model):
-    __tablename__ = "users"
-    id = db.Column('user_id', db.Integer, primary_key=True)
+class User(UserMixin, db.Model):
+    __tablename__ = "user"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column('username', db.String(50), unique=True, index=True)
     password_hash = db.Column('password', db.String(128))
     email = db.Column('email', db.String(50), unique=True, index=True)
+    history = db.relationship('SearchHistory', backref='searcher', lazy='dynamic')
     # registered_on = db.Column('registered_on', db.DateTime)
     # is_admin = db.Column(db.Boolean, default=False)
-
-    def __init__(self, username, password, email):
-        self.username = username
-        self.password = password
-        self.email = email
-        # self.registered_on = datetime.utcnow()
 
     @property
     def password(self):
@@ -59,23 +52,10 @@ class Users(db.Model):
         """Check if hashed password matches actual password."""
         return check_password_hash(self.password_hash, password)
 
-    @property
-    def is_authenticated(self):
-        """Return True if the user is authenticated."""
-        return True
-
-    @property
-    def is_active(self):
-        """Always True, as all users are active."""
-        return True
-
-    @property
-    def is_anonymous(self):
-        """Always False, as anonymous users aren't supported."""
-        return False
-
-    def get_id(self):
-        return str(self.id)
-
     def __repr__(self):
         return '<User: {}>'.format(self.username)
+
+
+@login.user_loader
+def load_user(id):
+    return User.query.get(int(id))
