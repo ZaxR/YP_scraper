@@ -1,12 +1,10 @@
 """Test."""
-import os
-
 from celery import Celery
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
 from flask_mail import Mail
-# from flask_migrate import Migrate, MigrateCommand
+from flask_migrate import Migrate, MigrateCommand
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 
@@ -34,7 +32,7 @@ login = LoginManager(app)
 csrf_protect = CSRFProtect(app)
 db = SQLAlchemy(app)
 mail = Mail(app)
-# migrate = Migrate(app)
+migrate = Migrate(app, db)
 bootstrap = Bootstrap(app)
 celery = make_celery(app)
 

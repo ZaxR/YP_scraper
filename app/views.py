@@ -8,7 +8,7 @@ from flask_login import current_user, login_user, logout_user
 from werkzeug.urls import url_parse
 
 from app import app, db, models
-from app.forms import LoginForm, ScrapeForm
+from app.forms import LoginForm, RegistrationForm, ScrapeForm
 from app.tasks import long_task, long_task_test, send_async_email
 
 
@@ -44,8 +44,9 @@ def generate_task_id(*args):
 def index():
     form = ScrapeForm(request.form)
     if request.method == 'POST':  # form.validate_on_submit():
-        # models.Records.__table__.drop(db.session.bind, checkfirst=True)
-        # models.Records.__table__.create(db.session.bind, checkfirst=True)
+        if not current_user.is_authenticated:
+            flash('Please log in to finish submitting your request.', category='info')
+            return redirect(url_for('login', next=request.url))
 
         # get raw input
         search_terms = request.form.getlist('search_terms')
@@ -78,6 +79,22 @@ def index():
     return render_template('index.html', form=form)
 
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        flash("You're already a logged in user - you don't need to register, silly.")
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = models.User(username=form.username.data, email=form.email.data)
+        user.password = form.password.data
+        db.session.add(user)
+        db.session.commit()
+        flash('Congratulations, you are now a registered user!')
+        return redirect(url_for('login'))
+    return render_template('register.html', title='Register', form=form)
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -85,9 +102,9 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = models.User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data):
+        if user is None or not user.verify_password(form.password.data):
             flash('Invalid username or password')
-            return redirect(url_for('login'))
+            return redirect(url_for('login', next=request.args.get('next')))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':

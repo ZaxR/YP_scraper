@@ -27,16 +27,10 @@ class SearchHistory(db.Model):
     location = db.Column(db.String(30), index=True, unique=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, date, term, location, username):
-        self.date = date
-        self.term = term
-        self.location = location
-        self.username = username
-
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
-    id = db.Column('user_id', db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column('username', db.String(50), unique=True, index=True)
     password_hash = db.Column('password', db.String(128))
     email = db.Column('email', db.String(50), unique=True, index=True)
@@ -57,24 +51,6 @@ class User(UserMixin, db.Model):
     def verify_password(self, password):
         """Check if hashed password matches actual password."""
         return check_password_hash(self.password_hash, password)
-
-    # @property
-    # def is_authenticated(self):
-    #     """Return True if the user is authenticated."""
-    #     return True
-
-    # @property
-    # def is_active(self):
-    #     """Always True, as all users are active."""
-    #     return True
-
-    # @property
-    # def is_anonymous(self):
-    #     """Always False, as anonymous users aren't supported."""
-    #     return False
-
-    # def get_id(self):
-    #     return str(self.id)
 
     def __repr__(self):
         return '<User: {}>'.format(self.username)
