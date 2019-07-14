@@ -66,7 +66,8 @@ def index():
 
         # long running stuff call goes here
         task_id = generate_task_id(search_terms, search_locations)
-        kwargs = {"recipient": request.form.get("recipient"),
+        kwargs = {"user": current_user.get_id(),
+                  "recipient": request.form.get("recipient"),
                   "search_terms": search_terms,
                   "search_locations": search_locations}
 
