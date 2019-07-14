@@ -45,7 +45,7 @@ def index():
     form = ScrapeForm(request.form)
     if request.method == 'POST':  # form.validate_on_submit():
         if not current_user.is_authenticated:
-            flash('Please log in to finish submitting your request.', category='info')
+            flash('Please log in to finish submitting your request.', category='warning')
             return redirect(url_for('login', next=request.url))
 
         # get raw input
@@ -71,7 +71,7 @@ def index():
                   "search_locations": search_locations}
 
         task = long_task_test.apply_async(kwargs=kwargs, task_id=task_id)  # task_id must be a string
-        flash('Starting scrape...')
+        flash('Starting scrape...', category='success')
         # flash(f"To see scrape progress, visit https://yp-scraper.herokuapp.com/status/{task.id}")
         # return redirect(url_for('index'))
         # return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
@@ -82,7 +82,7 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        flash("You're already a logged in user - you don't need to register, silly.")
+        flash("You're already a logged in user - you don't need to register, silly.", category='info')
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -90,7 +90,7 @@ def register():
         user.password = form.password.data
         db.session.add(user)
         db.session.commit()
-        flash('Congratulations, you are now a registered user!')
+        flash('Congratulations, you are now a registered user!', category='success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
@@ -98,12 +98,13 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
+        flash("You're already logged in, silly.", category='info')
         return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = models.User.query.filter_by(username=form.username.data).first()
         if user is None or not user.verify_password(form.password.data):
-            flash('Invalid username or password')
+            flash('Invalid username or password', category='danger')
             return redirect(url_for('login', next=request.args.get('next')))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
@@ -117,7 +118,7 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-
+    flash("We'll miss you. The Yellow Pages won't.", category='info')
     return redirect(url_for('index'))
 
 
