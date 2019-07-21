@@ -1,3 +1,16 @@
+<!-- Bootstrap js requirements -->
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+
+<!-- Custom css/js -->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+
+<!-- Base Flask-Bootstrap -->
+{% extends "bootstrap/base.html" %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,5 +19,53 @@
     <title>YellowPages Scraper</title>
 </head>
 <body>
-
+{% block body %}
+	{% block navbar %}
+		<div class="navbar navbar-default navbar-fixed-top">
+			<div class="navbar-header"><a class="navbar-brand" href="/">YP Scraper</a>
+		     	<a class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+		        	<span class="icon-bar"></span>
+		        	<span class="icon-bar"></span>
+		        	<span class="icon-bar"></span>
+		      	</a>
+		    </div>
+		    <div class="navbar-collapse collapse">
+		     	<ul class="nav navbar-nav navbar-right">
+		      		{% if current_user.is_authenticated %}
+      			  		<li><a href="{{ url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+    				{% else %}
+    			  		<li><a href="{{ url_for('register') }}"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+      			  		<li><a href="{{ url_for('login') }}"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+    				{% endif %}
+	    	  	</ul>
+		    </div>
+		</div>
+	{% endblock %}
+	<div class="content-wrapper">
+	    <div class="container">
+	        <div class="row">
+	            <div class="col-md-12">
+	                <h2 class="page-head-line">{% block title %}{% endblock %}</h2>
+	            </div>
+	        </div>
+	        <div class="row">
+	            <div class="col-md-12">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+	            </div>
+	        </div>
+			{% block content %}
+			{% endblock %}
+	    </div>
+	</div>
+{% endblock %}
 </body>
