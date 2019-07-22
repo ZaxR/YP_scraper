@@ -1,89 +1,51 @@
-<!-- Bootstrap js requirements -->
-<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
-
-<script src="{{url_for('static', filename='custom.js')}}"></script>
-
-{% extends "bootstrap/base.html" %}
-
-
-{% block body %}
-
-<div class="content-wrapper">
-    <div class="container">
-
-        <div class="row">
-            <div class="col-md-12">
-                <h2 class="page-head-line">YP Scraper</h2>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                    <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }} alert-dismissible" role="alert">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                    {{ message }}
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-8">
-                <div class="notice-board">
-                    <h3>Search Parameters</h3>
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            <form novalidate class="form-horizontal" action="" method="POST">
-                                <div class="form-group row">
-                                    <label for="search_term" class="col-sm-2 col-form-label">{{ form.search_term.label }}</label>
-                                    <div class="col-md-4">
-                                        {{ form.search_term(class_="form-control") }}
-                                        {% for error in form.search_term.errors %}
-                                            <span>[{{ error }}]</span>
-                                        {% endfor %}
-                                    </div>
-                                    <label for="search_location" class="col-sm-2 col-form-label">{{ form.search_location.label }}</label>
-                                    <div class="col-md-4">
-                                        {{ form.search_location(class_="form-control") }}
-                                        {% for error in form.search_location.errors %}
-                                            <span>[{{ error }}]</span>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="recipient_emails" class="col-sm-2 col-form-label">{{ form.recipient_emails.label }}</label>
-                                    <div class="col-sm-10">
-                                        {{ form.recipient_emails(class_="form-control", placeholder="email@domain.com") }}
-                                        {% for error in form.recipient_emails.errors %}
-                                            <span>[{{ error }}]</span>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                {{ form.submit(class="btn btn-warning btn-lg btn-block") }}
-                            </form>
+{% extends "base.html" %}
+{% block title %}YP Scraper{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="notice-board">
+            <h3>Search Parameters</h3>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <form novalidate class="form-horizontal" action="" method="POST">
+                        <div class="form-group row">
+                            <label for="search_term" class="col-sm-2 col-form-label">{{ form.search_term.label }}</label>
+                            <div class="col-md-4">
+                                {{ form.search_term(class_="form-control") }}
+                                {% for error in form.search_term.errors %}
+                                    <span>[{{ error }}]</span>
+                                {% endfor %}
+                            </div>
+                            <label for="search_location" class="col-sm-2 col-form-label">{{ form.search_location.label }}</label>
+                            <div class="col-md-4">
+                                {{ form.search_location(class_="form-control") }}
+                                {% for error in form.search_location.errors %}
+                                    <span>[{{ error }}]</span>
+                                {% endfor %}
+                            </div>
                         </div>
-                    </div>
+                        <div class="form-group row">
+                            <label for="recipient_emails" class="col-sm-2 col-form-label">{{ form.recipient_emails.label }}</label>
+                            <div class="col-sm-10">
+                                {{ form.recipient_emails(class_="form-control", placeholder="email@domain.com") }}
+                                {% for error in form.recipient_emails.errors %}
+                                    <span>[{{ error }}]</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {{ form.submit(class="btn btn-warning btn-lg btn-block") }}
+                    </form>
                 </div>
             </div>
+        </div>
+    </div>
 
             <div class="col-md-4">
                 <h3>Instructions</h3>
                 <div class="alert alert-warning">
                     <ul>
                         <li>The search term can be anything you want to search Yellow Pages for.</li>
-                        <li>The location can take the form of a City, State (e.g. 'Chicago, IL) or just a State name (e.g. 'IL' or 'Illinois').</li>
+                        <li>The location can take the form of a City, State (e.g. 'Chicago, IL') or just a State name (e.g. 'IL' or 'Illinois').</li>
                         <li>Enter a comma-separated list of e-mails to receive the scrape results as a CSV.</li>
                 </div>
                 <hr />
@@ -96,7 +58,7 @@
                         <thead>
                             <tr>
                                 <th scope="col">ID</th>
-                                <th scope="col">Run Time</th>
+                                <th scope="col">Start Time</th>
                                 <th scope="col">Search Term</th>
                                 <th scope="col">Location</th>
                                 <th scope="col">Status</th>
@@ -124,5 +86,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}

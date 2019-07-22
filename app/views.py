@@ -42,7 +42,8 @@ def index():
             print(f"index route user id: {current_user.get_id()}")
             task_id = generate_task_id(search_term, search_location)
             task = long_task_test.apply_async(kwargs=kwargs, task_id=task_id)  # task_id must be a string
-            flash('Starting scrape...', category='success')
+            flash(f"Scrape started. Check the following e-mail inbox(es) shortly for the results: "
+                  f"{', '.join(recipient_emails)}.", category='success')
             # flash(f"To see scrape progress, visit https://yp-scraper.herokuapp.com/status/{task.id}")
             # return redirect(url_for('index'))
             # return jsonify({}), 202, {'Location': url_for('taskstatus', task_id=task.id)}
