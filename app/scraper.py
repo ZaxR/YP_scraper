@@ -190,5 +190,5 @@ def get_results(task_id):
         file_like.close()
 
         return output_csv
-    else:
-        return 'No results found'
+
+    return None

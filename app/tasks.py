@@ -29,8 +29,6 @@ def long_task_test(self, user, recipient_emails, search_term, search_location):
                                           term=search_term,
                                           location=search_location,
                                           user_id=user)
-    print(search_history)
-    print(type(search_history))
     db.session.add(search_history)
     db.session.commit()
 
@@ -41,16 +39,28 @@ def long_task_test(self, user, recipient_emails, search_term, search_location):
 
     results = get_results(task_id)
 
-    attachment_filename = "YP_" + search_term + "_" + search_location + ".csv"
-
-    content_type = 'text/csv'
-    attachments = [Attachment(filename=attachment_filename, content_type=content_type, data=results.read())]
-    body = f"Attached are your scraped results for the term '{search_term}' for the location '{search_location}'."
+    attachments = []
+    if results:
+        attachment_filename = "YP_" + search_term + "_" + search_location + ".csv"
+        content_type = 'text/csv'
+        attachments = attachments.append(Attachment(filename=attachment_filename,
+                                                    content_type=content_type,
+                                                    data=results.read()))
+        body = f"Attached are your scraped results for the term '{search_term}' for the location '{search_location}'."
+    else:
+        body = f"No results found for the term '{search_term}' for the location '{search_location}'."
 
     msgd = {"recipients": recipient_emails, "subject": "Yellow Pages Scrape Results",
             "body": body, "attachments": attachments}
 
     send_async_email(msgd)
+
+    # temporarily delete records after they're emailed to save db space
+    try:
+        models.Records.query.filter_by(task_id=task_id).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
 
     # return {'current': 100, 'total': 100, 'status': 'Task completed!',
     #         'result': 42}
