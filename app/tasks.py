@@ -43,9 +43,9 @@ def long_task_test(self, user, recipient_emails, search_term, search_location):
     if results:
         attachment_filename = "YP_" + search_term + "_" + search_location + ".csv"
         content_type = 'text/csv'
-        attachments = attachments.append(Attachment(filename=attachment_filename,
-                                                    content_type=content_type,
-                                                    data=results.read()))
+        attachments.append(Attachment(filename=attachment_filename,
+                                      content_type=content_type,
+                                      data=results.read()))
         body = f"Attached are your scraped results for the term '{search_term}' for the location '{search_location}'."
     else:
         body = f"No results found for the term '{search_term}' for the location '{search_location}'."
